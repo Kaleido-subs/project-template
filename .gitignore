@@ -1,0 +1,38 @@
+# By default, ignore _all_ files, but not directories
+*
+!*/
+
+# Important project files
+!.gitattributes
+!.gitignore
+!*.ass
+!*.csv
+!*.log
+!*.md
+!*.midicsv
+!*.mscx
+!*.srt
+!*.xml
+
+# Fonts
+!*.otf
+!*.ttf
+!*.ttc
+
+# SubKt files
+!build.gradle.kts
+!gradle.properties
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+!settings.gradle.kts
+!sub.properties
+/.gradle/*
+/build/*
+
+# Ignoring merged .ass files, since we want those to be generated locally always
+*Merged*.ass
+
+# Extracted files
+*Track*
