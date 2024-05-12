@@ -108,13 +108,13 @@ subs {
 
             video {
                 lang("und")
-                name(get("vtrack").get())
+                name(get("vtrack"))
                 default(true)
             }
 
             audio {
                 lang("jpn")
-                name(get("atrack").get())
+                name(get("atrack"))
                 default(true)
                 forced(false)
             }
@@ -208,12 +208,12 @@ subs {
 
                 video {
                     lang("jpn")
-                    name(get("vtrack").get())
+                    name(get("vtrack"))
                     default(true)
                 }
                 audio {
                     lang("jpn")
-                    name(get("atrack").get())
+                    name(get("atrack"))
                     default(true)
                 }
                 includeChapters(false)
