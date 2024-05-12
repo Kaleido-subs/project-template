@@ -9,6 +9,14 @@ plugins {
     id("myaa.subkt")
 }
 
+fun ASSFile.getPlayRes(): Pair<Int?, Int?> {
+    return this.scriptInfo.playResX to this.scriptInfo.playResY
+}
+
+fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
+    return ASSFile(File(this.get())).getPlayRes()
+}
+
 // Check whether a string contains parts of a ktemplate
 fun String.isKaraTemplate(): Boolean {
     return this.startsWith("code") || this.startsWith("template") || this.startsWith("mixin")
@@ -16,7 +24,12 @@ fun String.isKaraTemplate(): Boolean {
 
 // Check whether a line is part of a ktemplate
 fun EventLine.isKaraTemplate(): Boolean {
-    return this.comment && this.effect.isKaraTemplate()
+    return this.effect.isKaraTemplate()
+}
+
+// Check if a line is entirely blank (commented, no text, actor, or effect)
+fun EventLine.isBlank(): Boolean {
+    return this.text.isEmpty() && this.actor.isEmpty() && this.effect.isEmpty()
 }
 
 subs {
@@ -45,20 +58,25 @@ subs {
         fromIfPresent(getList("INS"), ignoreMissingFiles = true)
         fromIfPresent(getList("TS"), ignoreMissingFiles = true)
 
+        fromIfPresent(get("render_warning"), ignoreMissingFiles = true)
+
         includeExtraData(false)
         includeProjectGarbage(false)
 
+        val (resX, resY) = get("dialogue").getPlayRes()
         scriptInfo {
             title = get("group").get()
             scaledBorderAndShadow = true
             wrapStyle = WrapStyle.NO_WRAP
+            values["LayoutResX"] = resX ?: 1920
+            values["LayoutResY"] = resY ?: 1080
         }
     }
 
     // Remove ktemplate lines from the final output
     val cleanmerge by task<ASS> {
         from(merge.item())
-        ass { events.lines.removeIf { it.isKaraTemplate() } }
+        ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
     }
 
     // Generate chapters from dialogue file
@@ -88,12 +106,12 @@ subs {
 
             video {
                 lang("jpn")
-                name(get("group").get())
+                name(get("vtrack").get())
                 default(true)
             }
             audio {
                 lang("jpn")
-                name(get("group").get())
+                name(get("atrack").get())
                 default(true)
             }
             includeChapters(false)
@@ -103,7 +121,7 @@ subs {
         from(cleanmerge.item()) {
             tracks {
                 lang("eng")
-                name(get("group_reg"))
+                name(get("strack_reg"))
                 default(true)
                 forced(false)
                 compression(CompressionType.ZLIB)
@@ -113,7 +131,7 @@ subs {
         from(swap.item()) {
             subtitles {
                 lang("enm")
-                name(get("group_hono"))
+                name(get("strack_hono"))
                 default(true)
                 forced(false)
                 compression(CompressionType.ZLIB)
@@ -125,22 +143,22 @@ subs {
         skipUnusedFonts(true)
 
         attach(get("common_fonts")) {
-            includeExtensions("ttf", "otf", "ttc")
+            includeExtensions("ttf", "otf")
         }
 
         attach(get("fonts")) {
-            includeExtensions("ttf", "otf", "ttc")
+            includeExtensions("ttf", "otf")
         }
 
         if (propertyExists("OP")) {
             attach(get("opfonts")) {
-                includeExtensions("ttf", "otf", "ttc")
+                includeExtensions("ttf", "otf")
             }
         }
 
         if (propertyExists("ED")) {
             attach(get("edfonts")) {
-                includeExtensions("ttf", "otf", "ttc")
+                includeExtensions("ttf", "otf")
             }
         }
 
@@ -183,17 +201,12 @@ subs {
 
                 video {
                     lang("jpn")
-                    name(get("group").get())
+                    name(get("vtrack").get())
                     default(true)
                 }
-                audio(0) {
+                audio {
                     lang("jpn")
-                    name("Opus 5.1 @ 320kb/s")
-                    default(true)
-                }
-                audio(1) {
-                    lang("jpn")
-                    name("Opus 2.0 @ 192kb/s")
+                    name(get("atrack").get())
                     default(true)
                 }
                 includeChapters(false)
@@ -203,7 +216,7 @@ subs {
             from(cleanncmerge.item()) {
                 tracks {
                     lang("eng")
-                    name(get("group"))
+                    name(get("strack_reg"))
                     default(true)
                     forced(false)
                     compression(CompressionType.ZLIB)
@@ -215,11 +228,11 @@ subs {
             skipUnusedFonts(true)
 
             attach(get("ncfonts")) {
-                includeExtensions("ttf", "otf", "ttc")
+                includeExtensions("ttf", "otf")
             }
 
             attach(get("common_fonts")) {
-                includeExtensions("ttf", "otf", "ttc")
+                includeExtensions("ttf", "otf")
             }
 
             out(get("ncmuxout"))
