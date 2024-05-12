@@ -9,6 +9,7 @@ plugins {
     id("myaa.subkt")
 }
 
+// Retrieve the script's playRes values
 fun ASSFile.getPlayRes(): Pair<Int?, Int?> {
     return this.scriptInfo.playResX to this.scriptInfo.playResY
 }
@@ -27,7 +28,7 @@ fun EventLine.isKaraTemplate(): Boolean {
     return this.effect.isKaraTemplate()
 }
 
-// Check if a line is entirely blank (commented, no text, actor, or effect)
+// Check if a line is entirely blank (no text, actor, or effect)
 fun EventLine.isBlank(): Boolean {
     return this.text.isEmpty() && this.actor.isEmpty() && this.effect.isEmpty()
 }
@@ -63,7 +64,10 @@ subs {
         includeExtraData(false)
         includeProjectGarbage(false)
 
+        // Try to set the LayoutRes values from the playRes values of the dialogue file.
+        // Falls back to 1920x1080 if not found
         val (resX, resY) = get("dialogue").getPlayRes()
+
         scriptInfo {
             title = get("group").get()
             scaledBorderAndShadow = true
@@ -73,7 +77,7 @@ subs {
         }
     }
 
-    // Remove ktemplate lines from the final output
+    // Remove ktemplate and empty lines from the final output
     val cleanmerge by task<ASS> {
         from(merge.item())
         ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
@@ -85,14 +89,12 @@ subs {
         chapterMarker("chapter")
     }
 
-    // Run swapper script for honorifics
+    // Run swapper script for honorifics and other swaps
     swap { from(cleanmerge.item()) }
 
-    // Finally, mux
+    // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
     mux {
         title(get("title"))
-
-        skipUnusedFonts(true)
 
         // Optionally specify mkvmerge version to use
         if (propertyExists("mkvmerge")) {
@@ -105,15 +107,18 @@ subs {
             }
 
             video {
-                lang("jpn")
+                lang("und")
                 name(get("vtrack").get())
                 default(true)
             }
+
             audio {
                 lang("jpn")
                 name(get("atrack").get())
                 default(true)
+                forced(false)
             }
+
             includeChapters(false)
             attachments { include(false) }
         }
@@ -140,6 +145,7 @@ subs {
 
         chapters(chapters.item()) { lang("eng") }
 
+        // Fonts handling
         skipUnusedFonts(true)
 
         attach(get("common_fonts")) {
@@ -150,6 +156,7 @@ subs {
             includeExtensions("ttf", "otf")
         }
 
+        // Get OP/ED fonts if necessary
         if (propertyExists("OP")) {
             attach(get("opfonts")) {
                 includeExtensions("ttf", "otf")
