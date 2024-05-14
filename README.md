@@ -11,13 +11,17 @@ of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kale
 
 - [SubKt](https://github.com/Myaamori/SubKt)
 - [mkvmerge](https://mkvtoolnix.download/downloads.html)
-- [JDK SE 14](https://www.oracle.com/java/technologies/javase/jdk14-archive-downloads.html)
-  or [15](https://www.oracle.com/java/technologies/javase/jdk15-archive-downloads.html)
+- [JDK SE 14](https://www.oracle.com/java/technologies/javase/jdk14-archive-downloads.html),
+  [15](https://www.oracle.com/java/technologies/javase/jdk15-archive-downloads.html),
+  or [16](https://www.oracle.com/java/technologies/javase/jdk16-archive-downloads.html)
 
-**Warning**:
+### Warning
+
 Currently,
-only JDK 14 or 15 appears to work out-of-the-box with SubKt.
-Please ensure Gradle uses the correct version if you run into any issues.
+only JDK 14, and 15 appear to work out-of-the-box with SubKt,
+but support has been added to this template for 16 too.<br>
+Please ensure Gradle uses the correct version
+if you run into any issues.
 
 ## Directory Structure
 
@@ -41,7 +45,7 @@ on a per-project basis:
 
 - **common/**: Common resources for all episodes
 
-  - `warning.ass`: A subtitle file that contains a warning to display in players that don't support ASS tags properly.
+  - (Optional) `warning.ass`: A subtitle file that contains a warning to display in players that don't support ASS tags properly.
   - `fonts/`: Directory containing common fonts, such as dialogue fonts.
 
 ## Getting Started
@@ -52,7 +56,7 @@ To get started with this template:
 
    Click the following button in the top-right of the [project-template](https://github.com/Kaleido-subs/project-template) GitHub repo.
 
-   ![button](https://i.imgur.com/zT0SLVM.png)
+   ![Github "Use this template" button](https://i.imgur.com/zT0SLVM.png)
 
 2. **Set up project files:**
 
@@ -64,7 +68,7 @@ To get started with this template:
    set up the following files:
 
    - Set up the `sub.properties` file.
-     - Set the name and expected paths.
+     - Set the name of your group and the show.
      - Set the format of the video and audio.
      - Set the number of episodes, as well as any specials.
      - Set the episode ranges for the OP and EDs.
