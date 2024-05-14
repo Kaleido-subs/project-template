@@ -19,7 +19,7 @@ of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kale
 
 Currently,
 only JDK 14, and 15 appear to work out-of-the-box with SubKt,
-but support has been added to this template for 16 too.<br>
+but support has been added to this template for 16 too.
 Please ensure Gradle uses the correct version
 if you run into any issues.
 
@@ -104,7 +104,7 @@ To get started with this template:
 
 Spot an issue in the build scripts?
 Have any suggestions?
-Contributions are welcome!
+Contributions are welcome!<br>
 Please fork the repository
 and create a pull request with your changes,
 or create an issue.
