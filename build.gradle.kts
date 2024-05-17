@@ -80,7 +80,8 @@ subs {
     // Remove ktemplate and empty lines from the final output
     val cleanmerge by task<ASS> {
         from(merge.item())
-        ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
+        // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
+        ass { events.lines.removeIf { it.isBlank() } }
     }
 
     // Generate chapters from dialogue file
@@ -190,7 +191,8 @@ subs {
 
         val cleanncmerge by task<ASS> {
             from(merge.item())
-            ass { events.lines.removeIf { it.isKaraTemplate() } }
+            // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
+            ass { events.lines.removeIf { it.isBlank() } }
         }
 
         chapters {
