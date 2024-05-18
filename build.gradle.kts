@@ -91,7 +91,11 @@ subs {
     }
 
     // Run swapper script for honorifics and other swaps
-    swap { from(cleanmerge.item()) }
+    swap {
+        from(cleanmerge.item())
+
+        styles(Regex("Main|Default|Alt"))
+    }
 
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
     mux {
