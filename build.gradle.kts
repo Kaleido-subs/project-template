@@ -33,6 +33,11 @@ fun EventLine.isBlank(): Boolean {
     return this.text.isEmpty() && this.actor.isEmpty() && this.effect.isEmpty()
 }
 
+// Check if a line is dialogue
+fun EventLine.isDialogue(): Boolean {
+    return Regex("Main|Default|Alt") in this.style
+}
+
 subs {
     readProperties("sub.properties")
     episodes(getList("episodes"))
@@ -77,48 +82,6 @@ subs {
         }
     }
 
-    val merge_ss by task<Merge>{
-
-        if (propertyExists("OP")) {
-            from(get("OP")) {
-                syncSourceLine("sync")
-                syncTargetLine("opsync")
-            }
-        }
-
-        if (propertyExists("ED")) {
-            from(get("ED")) {
-                syncSourceLine("sync")
-                syncTargetLine("edsync")
-            }
-        }
-
-        fromIfPresent(get("extra"), ignoreMissingFiles = true)
-        fromIfPresent(getList("INS"), ignoreMissingFiles = true)
-        fromIfPresent(getList("TS"), ignoreMissingFiles = true)
-
-        fromIfPresent(get("render_warning"), ignoreMissingFiles = true)
-
-        includeExtraData(false)
-        includeProjectGarbage(false)
-
-        // Try to set the LayoutRes values from the playRes values of the dialogue file.
-        // Falls back to 1920x1080 if not found
-        val (resX, resY) = get("dialogue").getPlayRes()
-
-        scriptInfo {
-            title = get("group").get()
-            scaledBorderAndShadow = true
-            wrapStyle = WrapStyle.NO_WRAP
-            values["LayoutResX"] = resX ?: 1920
-            values["LayoutResY"] = resY ?: 1080
-        }
-
-
-
-
-    }
-
     // Remove ktemplate and empty lines from the final output
     val cleanmerge by task<ASS> {
         from(merge.item())
@@ -126,10 +89,12 @@ subs {
         ass { events.lines.removeIf { it.isBlank() } }
     }
 
-    val cleanmerge_ss by task<ASS> {
-        from(merge_ss.item())
-        // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
-        ass { events.lines.removeIf { it.isBlank() } }
+    // Remove dialogue lines from forced Signs & Song tracks
+    val forced by task<ASS> {
+        from(cleanmerge.item())
+        ass {
+            events.lines.removeIf { it.isDialogue() }
+        }
     }
 
     // Generate chapters from dialogue file
@@ -203,7 +168,7 @@ subs {
             }
         }
 
-        from(cleanmerge_ss.item()) {
+        from(forced.item()) {
             tracks {
                 lang("eng")
                 name(get("strack_ss"))
