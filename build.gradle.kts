@@ -94,6 +94,14 @@ subs {
         ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
     }
 
+    // Remove dialogue lines from forced Signs & Song tracks
+    val forced by task<ASS> {
+        from(cleanmerge.item())
+        ass {
+            events.lines.removeIf { it.isDialogue() }
+        }
+    }
+
     // Generate chapters from dialogue file
     chapters {
         from(get("chapters"))
@@ -127,7 +135,7 @@ subs {
                 default(true)
             }
 
-            audio {
+            audio(0) {
                 lang("jpn")
                 name(get("atrack_reg"))
                 default(true)
@@ -154,6 +162,16 @@ subs {
                 name(get("strack_hono"))
                 default(true)
                 forced(false)
+                compression(CompressionType.ZLIB)
+            }
+        }
+
+        from(forced.item()) {
+            tracks {
+                lang("eng")
+                name(get("strack_ss"))
+                default(false)
+                forced(true)
                 compression(CompressionType.ZLIB)
             }
         }
