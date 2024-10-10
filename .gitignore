@@ -36,3 +36,9 @@
 
 # Extracted files
 *Track*
+
+# Unignoring certain subtitle files because CCs
+!*.idx
+!*.srt
+!*.sub
+!*.sup
