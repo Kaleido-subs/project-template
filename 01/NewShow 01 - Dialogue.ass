@@ -21,7 +21,7 @@ Style: Alt,LTFinnegan Medium,72,&H00FFFFFF,&H00FFFFFF,&H00564100,&HA0000000,0,0,
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,---- Chapters
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=0}---- Chapters
 Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,{Intro}
 Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,{OP}
 Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,opsync,{OPSync — First hard cut}
@@ -30,5 +30,13 @@ Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,{Part B}
 Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,{ED}
 Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,edsync,{EDSync — First hard cut}
 Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,{Outro}
-Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,---- Dialogue
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=1}---- Chapters
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=2}---- Dialogue
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=3}---- Dialogue
 Dialogue: 10,0:00:00.00,0:00:00.00,Default,,0,0,0,,
+
+[Aegisub Extradata]
+Data: 0,_aegi_folddata,e0;0;1
+Data: 1,_aegi_folddata,e1;0;1
+Data: 2,_aegi_folddata,e0;0;2
+Data: 3,_aegi_folddata,e1;0;2
