@@ -90,11 +90,16 @@ subs {
     }
 
     // Remove dialogue lines from forced Signs & Song tracks
-    val forced by task<ASS> {
+    val strip_dialogue by task<ASS> {
         from(cleanmerge.item())
         ass {
             events.lines.removeIf { it.isDialogue() }
         }
+    }
+    // and merge in the forced track (if present)
+    val forced by task<Merge> {
+        fromIfPresent(get("forced"), ignoreMissingFiles = true)
+        from(strip_dialogue.item())
     }
 
     // Generate chapters from dialogue file
