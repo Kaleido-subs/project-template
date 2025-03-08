@@ -33,8 +33,18 @@ fun EventLine.isBlank(): Boolean {
     return this.text.isEmpty() && this.actor.isEmpty() && this.effect.isEmpty()
 }
 
+// Check if a line has a negative duration. These will never render anyway and cause the mux to hang (subkt bug)
+fun EventLine.isNegativeDuration(): Boolean {
+    return this.end < this.start
+}
+
+// Define layout and playres values
+// Since we're authoring new scripts, these must be equal.
+val displayResX = 1920
+val displayResY = 1080
+
 subs {
-    readProperties("sub.properties")
+    readProperties("sub.properties", "../sekrit.properties")
     episodes(getList("episodes"))
 
     // Merge all the individual script components
@@ -55,7 +65,7 @@ subs {
             }
         }
 
-        fromIfPresent(get("extra"), ignoreMissingFiles = true)
+        fromIfPresent(getList("extra"), ignoreMissingFiles = true)
         fromIfPresent(getList("INS"), ignoreMissingFiles = true)
         fromIfPresent(getList("TS"), ignoreMissingFiles = true)
 
@@ -65,23 +75,23 @@ subs {
         includeProjectGarbage(false)
 
         // Try to set the LayoutRes values from the playRes values of the dialogue file.
-        // Falls back to 1920x1080 if not found
+        // Falls back to DisplayRes values if not found
         val (resX, resY) = get("dialogue").getPlayRes()
 
         scriptInfo {
             title = get("group").get()
             scaledBorderAndShadow = true
             wrapStyle = WrapStyle.NO_WRAP
-            values["LayoutResX"] = resX ?: 1920
-            values["LayoutResY"] = resY ?: 1080
+            values["LayoutResX"] = resX ?: displayResX
+            values["LayoutResY"] = resY ?: displayResY
         }
     }
 
     // Remove ktemplate and empty lines from the final output
     val cleanmerge by task<ASS> {
         from(merge.item())
-        // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
-        ass { events.lines.removeIf { it.isBlank() } }
+        // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
+        ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
     }
 
     // Generate chapters from dialogue file
@@ -94,7 +104,7 @@ subs {
     swap {
         from(cleanmerge.item())
 
-        styles(Regex("Main|Default|Alt"))
+        styles(listOf(""))
     }
 
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
@@ -119,7 +129,7 @@ subs {
 
             audio {
                 lang("jpn")
-                name(get("atrack"))
+                name(get("atrack_reg"))
                 default(true)
                 forced(false)
             }
@@ -186,22 +196,23 @@ subs {
             includeExtraData(false)
             includeProjectGarbage(false)
 
+            // Try to set the LayoutRes values from the playRes values of the dialogue file.
+            // Falls back to DisplayRes values if not found
+            val (resX, resY) = get("ncsubs").getPlayRes()
+
             scriptInfo {
-                title = get("group").get()
-                originalScript = get("group").get()
+                title = get("ncsubs").get()
                 scaledBorderAndShadow = true
+                wrapStyle = WrapStyle.NO_WRAP
+                values["LayoutResX"] = resX ?: displayResX
+                values["LayoutResY"] = resY ?: displayResY
             }
         }
 
         val cleanncmerge by task<ASS> {
             from(merge.item())
-            // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() } }
-            ass { events.lines.removeIf { it.isBlank() } }
-        }
-
-        chapters {
-            from(cleanncmerge.item())
-            chapterMarker("ncchapter")
+            // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
+            ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
         }
 
         mux {
@@ -217,11 +228,13 @@ subs {
                     name(get("vtrack"))
                     default(true)
                 }
-                audio {
+
+                audio(0) {
                     lang("jpn")
                     name(get("atrack"))
                     default(true)
                 }
+
                 includeChapters(false)
                 attachments { include(false) }
             }
@@ -236,8 +249,6 @@ subs {
                 }
             }
 
-            chapters(chapters.item()) { lang("eng") }
-
             skipUnusedFonts(true)
 
             attach(get("ncfonts")) {
@@ -249,6 +260,27 @@ subs {
             }
 
             out(get("ncmuxout"))
+        }
+    }
+
+    // Upload files to sneak-peek Plex server
+    tasks(getList("episodes")) {
+        fun FTP.configure() {
+            host(get("ftp_host"))
+            port(getAs<Int>("ftp_port"))
+
+            username(get("ftp_user"))
+            password(get("ftp_pass"))
+
+            overwriteIf(OverwriteStrategy.ALWAYS)
+        }
+
+        val PlexUpload by task<FTP> {
+            from(mux.item())
+            configure()
+
+            // TODO: Figure out why this is not working
+            into(getRaw("ftp_filedir") + "/" + get("plexpath").get())
         }
     }
 }
