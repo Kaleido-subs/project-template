@@ -38,6 +38,16 @@ fun EventLine.isNegativeDuration(): Boolean {
     return this.end < this.start
 }
 
+// Check if a line has a zero duration.
+fun EventLine.isZeroDuration(): Boolean {
+    return this.end == this.start
+}
+
+// Check if a line is dialogue
+fun EventLine.isDialogue(): Boolean {
+    return Regex("Main|Default|Alt") in this.style
+}
+
 // Define layout and playres values
 // Since we're authoring new scripts, these must be equal.
 val displayResX = 1920
@@ -120,6 +130,23 @@ subs {
         styles(listOf(""))
     }
 
+    // Remove dialogue lines from forced Signs & Song tracks...
+    val strip_dialogue by task<ASS> {
+        from(cleanmerge.item())
+        ass {events.lines.removeIf { it.isDialogue() } }
+    }
+
+    // ...merge the forced track (if present) and swap
+    val forced by task<Merge> {
+        fromIfPresent(get("forced"), ignoreMissingFiles = true)
+        from(strip_dialogue.item())
+
+        styles(listOf(""))
+
+        delimiter("/")
+        lineMarker("///")
+    }
+
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
     mux {
         title(get("title"))
@@ -142,9 +169,19 @@ subs {
 
             audio(0) {
                 lang("jpn")
-                name(get("atrack_reg"))
+                name(get("atrack_main"))
                 default(true)
                 forced(false)
+            }
+
+            // dual audio -- assume english
+            if (audio().size > 1) {
+                audio(1) {
+                    lang("eng")
+                    name(get("atrack_dub"))
+                    default(true)
+                    forced(false)
+                }
             }
 
             includeChapters(false)
@@ -252,9 +289,10 @@ subs {
                     default(true)
                 }
 
-                audio(0) {
+                audio {
                     lang("jpn")
                     name(get("atrack_reg"))
+                    name(get("atrack_main"))
                     default(true)
                 }
 
@@ -285,8 +323,6 @@ subs {
             out(get("ncmuxout"))
         }
     }
-
-    // Upload files to sneak-peek Plex server
     tasks(getList("episodes")) {
         fun FTP.configure() {
             host(get("ftp_host"))
