@@ -1,5 +1,8 @@
 # The Kaleido SubKt Project template
 
+[![SubKt Compatibility](https://img.shields.io/badge/SubKt-1.20.1-blue)](https://github.com/TypesettingTools/SubKt)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 Clone this repo
 and copy all the files over
 when making a new fansubbing project.
@@ -15,42 +18,53 @@ of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kale
   [15](https://www.oracle.com/java/technologies/javase/jdk15-archive-downloads.html),
   or [16](https://www.oracle.com/java/technologies/javase/jdk16-archive-downloads.html)
 
-### Warning
+> [!IMPORTANT]
+> Ensure all tools are properly added to your system's PATH:
+> - Windows: Edit System Environment Variables → Path → Add the installation directories
+> - Unix: Add export PATH="$PATH:/path/to/tool" to your ~/.bashrc or ~/.zshrc
 
-Currently,
-only JDK 14, and 15 appear to work out-of-the-box with SubKt,
-but support has been added to this template for 16 too.
-Please ensure Gradle uses the correct version
-if you run into any issues.
+> [!CAUTION]
+> Currently, only JDK 14, and 15 appear to work out-of-the-box with SubKt, but support has been added to this template for 16 too.
+> Please ensure Gradle uses the correct version if you run into any issues.
 
 ## Directory Structure
 
-The following files should be adjusted
-on a per-project basis:
+```
+project-root/
+├── build.gradle.kts           # SubKt Gradle build script
+├── sub.properties            # Project configuration
+├── common/                   # Shared resources
+│   ├── warning.ass          # Optional player warning
+│   └── fonts/               # Common fonts
+├── 01/                      # Episode directory
+│   ├── NewShow - 01 - (Premux) [ABCDEF01].mkv
+│   ├── NewShow - 01 - Dialogue.ass
+│   ├── NewShow - 01 - TS.ass
+│   ├── NewShow - 01 - TS (Light).ass     # Multiple TS allowed
+│   ├── NewShow - 01 - INS (OP).ass       # Optional
+│   ├── NewShow - 01 - INS (ED).ass       # Optional
+│   ├── NewShow - 01 - Extra.ass          # Optional
+│   └── fonts/                            # Episode-specific fonts
+└── build/                   # Generated output
+    └── 01/                 # Episode build artifacts
+```
 
-- **Root Directory:**
+### File Naming Requirements
 
-  - `build.gradle.kts`: SubKt Gradle build script.
-  - `sub.properties`: Project properties config file.
+- **Video files:** `ShowName - XX - (Premux) [CRC32].mkv`
+- **Dialogue:** `ShowName - XX - Dialogue.ass`
+- **Typesetting:** `ShowName - XX - TS.ass` or `ShowName - XX - TS (Author).ass`
+- **Insert Songs:** `ShowName - XX - INS (Description).ass`
+- **Extra:** `ShowName - XX - Extra.ass`
 
-- **01/**: Example of regular episode directory
-
-  - `NewShow 01 - (Premux) [ABCDEF01].mkv`: Premux file.
-  - `NewShow 01 - Dialogue.ass`: Subtitle file for dialogue.
-  - `NewShow 01 - TS.ass`: Subtitle file for typesetting.
-    - There can be multiple TS files. Example: `NewShow 01 - TS (Light).ass` & `NewShow 01 - TS (petzku).ass`
-  - (Optional) `NewShow 01 - INS.ass`: Subtitle file for insert songs.
-    - There can be multiple INS files. Example: `NewShow 01 - INS (OP).ass` & `NewShow 01 - INS (Song Name).ass`
-  - (Optional) `NewShow 01 - Extra.ass`: Subtitle file for any extra subtitles that may not fit elsewhere.
-
-- **common/**: Common resources for all episodes
-
-  - (Optional) `warning.ass`: A subtitle file that contains a warning to display in players that don't support ASS tags properly.
-  - `fonts/`: Directory containing common fonts, such as dialogue fonts.
+> [!NOTE]
+> - Replace `XX` with the episode number (zero-padded)
+> - CRC32 is optional but recommended
+> - Author tags in TS files should match contributor names
 
 ## Getting Started
 
-To get started with this template:
+### 1. Project Setup
 
 1. **Use the Template Repository:**
 
@@ -85,20 +99,30 @@ To get started with this template:
    Use the Gradle wrapper to build the project:
 
    ```sh
-   ./gradlew mux.01   # For Unix
-   gradlew.bat mux.01 # For Windows
+   # Unix
+   ./gradlew chapters.01    # Generate chapters
+   ./gradlew merge.01      # Merge subtitle files
+   ./gradlew cleanmerge.01 # Clean merged subtitles
+   ./gradlew mux.01        # Create final MKV
+
+   # Windows
+   gradlew.bat chapters.01
+   gradlew.bat merge.01
+   gradlew.bat cleanmerge.01
+   gradlew.bat mux.01
    ```
 
-   `mux` can be replaced with any of the following commands:
+### Troubleshooting
 
-   - `chapters`: Create a chapters file from the episode's dialogue subtitle file.
-   - `merge`: Merge the episode's subtitle files together, as well as optional OP and ED subtitle files.
-   - `cleanmerge`: Same as merge, but clean up the merge output by removing ktemplates and empty lines.
-   - `swap`: Create a swapped subtitle file. This is commonly used for honorific tracks.
+1. **Merge Failures:**
+   - Check for syntax errors in ASS files
+   - Verify font names match between files
+   - Ensure no UTF-16 BOM in subtitle files
 
-   The output of these commands,
-   minux `mux`,
-   can be found in the `build/` directory.
+2. **Mux Errors:**
+   - Verify mkvmerge is in PATH
+   - Check premux file exists and is readable
+   - Ensure all referenced fonts exist
 
 ## Contributing
 

@@ -33,7 +33,6 @@ Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,{Outro}
 Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=1}---- Chapters
 Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=2}---- Dialogue
 Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=3}---- Dialogue
-Dialogue: 10,0:00:00.00,0:00:00.00,Default,,0,0,0,,
 
 [Aegisub Extradata]
 Data: 0,_aegi_folddata,e0;0;1
