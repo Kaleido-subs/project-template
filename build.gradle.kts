@@ -254,7 +254,7 @@ subs {
 
                 audio(0) {
                     lang("jpn")
-                    name(get("atrack"))
+                    name(get("atrack_reg"))
                     default(true)
                 }
 
