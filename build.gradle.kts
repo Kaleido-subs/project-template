@@ -114,7 +114,7 @@ subs {
     swap {
         from(cleanmerge.item())
 
-        styles(listOf(""))
+        styles(Regex(".*"))
     }
 
     // Remove dialogue lines from forced Signs & Song tracks...
@@ -133,7 +133,7 @@ subs {
     val forced by task<Swap> {
         from(forced_merge.item())
 
-        styles(listOf(""))
+        styles(Regex(".*"))
 
         delimiter("/")
         lineMarker("///")
