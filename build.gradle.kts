@@ -123,10 +123,15 @@ subs {
         ass {events.lines.removeIf { it.isDialogue() } }
     }
 
-    // ...merge the forced track (if present) and swap
-    val forced by task<Merge> {
-        fromIfPresent(get("forced"), ignoreMissingFiles = true)
+    // ...merge the forced track (if present)...
+    val forced_merge by task<Merge> {
         from(strip_dialogue.item())
+        fromIfPresent(getList("forced"), ignoreMissingFiles = true)
+    }
+
+    // ...and finally, swap.
+    val forced by task<Swap> {
+        from(forced_merge.item())
 
         styles(listOf(""))
 
