@@ -104,7 +104,7 @@ subs {
     swap {
         from(cleanmerge.item())
 
-        styles(listOf(""))
+        styles(Regex(".*"))
     }
 
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
