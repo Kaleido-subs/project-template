@@ -62,6 +62,10 @@ project-root/
 > - CRC32 is optional but recommended
 > - Author tags in TS files should match contributor names
 
+- **.github.sample/workflows/**: GitHub Actions workflows. Remove `.sample` from the directory name.
+
+  - `test-mux.yaml`: A workflow that attempts to run a test mux on each episode on every push to the repo.
+
 ## Getting Started
 
 ### 1. Project Setup
