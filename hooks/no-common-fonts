@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Git pre-push hook to prevent pushing duplicate font files that already exist in the 'common' directory.
+#
+# Installation:
+# 1. Copy this file to `.git/hooks/pre-push` in your repository
+#    (Run the command: `cp hooks/no-common-fonts .git/hooks/pre-push` in git bash)
+# 2. Make it executable: `chmod +x .git/hooks/pre-push`
+# 3. The hook will now run automatically before each `git push`
+
+get_file_hash() {
+    local filepath="$1"
+    sha256sum "$filepath" | awk '{print $1}'
+}
+
+get_font_files() {
+    local directory="$1"
+    local font_extensions=("*.ttf" "*.otf" "*.ttc" "*.woff" "*.woff2" "*.eot")
+
+    find "$directory" -type f \
+        \( -name "${font_extensions[0]}" -o -name "${font_extensions[1]}" \
+        -o -name "${font_extensions[2]}" -o -name "${font_extensions[3]}" \
+        -o -name "${font_extensions[4]}" -o -name "${font_extensions[5]}" \) \
+        ! -path "./common/fonts/*" -print0 \
+    | while IFS= read -r -d '' file; do
+        file_hash=$(get_file_hash "$file")
+        printf "%s\0%s\0" "$file_hash" "$file"
+    done
+}
+
+main() {
+    declare -A common_fonts_map
+    declare -A staged_fonts_map
+    local duplicates=()
+
+    # Read common fonts into an associative array
+    while true; do
+        IFS= read -r -d '' hash || break
+        IFS= read -r -d '' file || break
+        common_fonts_map["$hash"]+="$file"$'\n'
+    done < <(get_font_files "common")
+
+    # Read staged fonts into an associative array
+    while true; do
+        IFS= read -r -d '' hash || break
+        IFS= read -r -d '' file || break
+        staged_fonts_map["$hash"]+="$file"$'\n'
+    done < <(get_font_files ".")
+
+    for hash in "${!staged_fonts_map[@]}"; do
+        if [[ -n "${common_fonts_map[$hash]}" ]]; then
+            duplicates+=("$hash")
+        fi
+    done
+
+    if [ ${#duplicates[@]} -eq 0 ]; then
+        exit 0
+    fi
+
+    echo "Duplicate font file(s) detected and removed:"
+
+    for hash in "${duplicates[@]}"; do
+        files="${staged_fonts_map[$hash]}"
+
+        while IFS= read -r path; do
+            if [[ "$path" == ./common/* || "$path" == common/* ]]; then
+                echo "Skipping (in common): [$path]"
+            elif [ -n "$path" ] && [ -e "$path" ]; then
+                echo "Deleting: [$path]"
+                rm -f -- "$path"
+            elif [ -n "$path" ]; then
+                echo "File does not exist at deletion time: [$path]"
+            fi
+        done <<< "$files"
+    done
+
+    echo -e "\n${#duplicates[@]} duplicate font files removed."
+    echo "Push aborted."
+    echo "Please stage and commit the deletions, then push again."
+    echo ""
+    echo "If you are sure you want to push these duplicate font files, you can use the --no-verify flag."
+    echo ""
+
+    exit 1
+}
+
+main
