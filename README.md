@@ -20,6 +20,7 @@ of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kale
 
 > [!IMPORTANT]
 > Ensure all tools are properly added to your system's PATH:
+>
 > - Windows: Edit System Environment Variables → Path → Add the installation directories
 > - Unix: Add export PATH="$PATH:/path/to/tool" to your ~/.bashrc or ~/.zshrc
 
@@ -58,6 +59,7 @@ project-root/
 - **Extra:** `ShowName - XX - Extra.ass`
 
 > [!NOTE]
+>
 > - Replace `XX` with the episode number (zero-padded)
 > - CRC32 is optional but recommended
 > - Author tags in TS files should match contributor names
@@ -115,6 +117,7 @@ project-root/
 ### Troubleshooting
 
 1. **Merge Failures:**
+
    - Check for syntax errors in ASS files
    - Verify font names match between files
    - Ensure no UTF-16 BOM in subtitle files
@@ -123,6 +126,40 @@ project-root/
    - Verify mkvmerge is in PATH
    - Check premux file exists and is readable
    - Ensure all referenced fonts exist
+
+### Scripts & Hooks
+
+This template comes with multiple scripts and hooks.
+
+#### no-common-fonts
+
+A pre-commit hook
+that checks if any pushed fonts
+match any fonts in `common/fonts`.
+This is to prevent users from pushing duplicate fonts
+and potentially overriding dialogue fonts
+with different versions of the font.
+
+#### project_setup
+
+A simple shell script that updates the local git config
+to filter commits using `scripts/clean_project_garbage.sh`.
+This will filter out Aegisub project garbage metadata
+so users won't keep overriding this with their own premux locations
+and other local metadata.
+
+#### blank_dialogue
+
+Replaces the given .ass subtitle file with:
+
+- Custom metadata and two predefined styles (Default, Alt)
+- A set of fixed chapter marker and comment events
+- All Dialogue lines retained structurally but emptied of text
+
+The original file is overwritten in-place.
+This is used to blank out for example official scripts
+while preserving their timing
+to use for original translations.
 
 ## Contributing
 

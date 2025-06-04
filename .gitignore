@@ -43,5 +43,6 @@
 !*.sub
 !*.sup
 
-# Unignoring hooks
+# Unignoring hooks and scripts
 !hooks/*
+!scripts/*
