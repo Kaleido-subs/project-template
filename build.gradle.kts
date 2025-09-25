@@ -47,9 +47,18 @@ subs {
     readProperties("sub.properties", "../sekrit.properties")
     episodes(getList("episodes"))
 
+    val layerDialogue by task<ASS> {
+        from(get("dialogue"))
+        ass {
+            // could just use incrementLayer in merge.from,
+            // but apparently comments having non-zero layer is ugly, so no
+            events.lines.filter { !it.comment || it.effect == "***" }.forEach { it.layer += 69 }
+        }
+    }
+
     // Merge all the individual script components
     merge {
-        from(get("dialogue"))
+        from(layerDialogue.item())
 
         if (propertyExists("OP")) {
             from(get("OP")) {
@@ -66,24 +75,21 @@ subs {
         }
 
         fromIfPresent(getList("extra"), ignoreMissingFiles = true)
-        fromIfPresent(getList("INS"), ignoreMissingFiles = true)
         fromIfPresent(getList("TS"), ignoreMissingFiles = true)
+
+        fromIfPresent(getList("INS"), ignoreMissingFiles = true) {
+            incrementLayer(20)
+        }
 
         fromIfPresent(get("render_warning"), ignoreMissingFiles = true)
 
         includeExtraData(false)
         includeProjectGarbage(false)
 
-        // Try to set the LayoutRes values from the playRes values of the dialogue file.
-        // Falls back to DisplayRes values if not found
-        val (resX, resY) = get("dialogue").getPlayRes()
-
         scriptInfo {
             title = get("group").get()
             scaledBorderAndShadow = true
             wrapStyle = WrapStyle.NO_WRAP
-            values["LayoutResX"] = resX ?: displayResX
-            values["LayoutResY"] = resY ?: displayResY
         }
     }
 
@@ -193,19 +199,15 @@ subs {
         merge {
             from(get("ncsubs"))
 
+            fromIfPresent(get("ncts"))
+
             includeExtraData(false)
             includeProjectGarbage(false)
 
-            // Try to set the LayoutRes values from the playRes values of the dialogue file.
-            // Falls back to DisplayRes values if not found
-            val (resX, resY) = get("ncsubs").getPlayRes()
-
             scriptInfo {
-                title = get("ncsubs").get()
+                title = get("group").get()
                 scaledBorderAndShadow = true
                 wrapStyle = WrapStyle.NO_WRAP
-                values["LayoutResX"] = resX ?: displayResX
-                values["LayoutResY"] = resY ?: displayResY
             }
         }
 
