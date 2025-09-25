@@ -4,6 +4,7 @@ import myaa.subkt.tasks.Mux.*
 import myaa.subkt.tasks.Nyaa.*
 import myaa.subkt.tasks.utils.*
 import java.awt.Color
+import java.io.File
 import java.time.*
 
 plugins {
@@ -56,6 +57,86 @@ fun EventLine.isZeroDuration(): Boolean {
 // Check if a line is dialogue
 fun EventLine.isDialogue(): Boolean {
     return this.style.matches(Regex("Main|Default|Alt"))
+}
+
+
+// Check if premux has multiple audio tracks with English as second track
+fun includeForcedTrack(sortedTracks: List<MkvTrack>): Boolean {
+    val audioTracks = sortedTracks.filter { it.type == "audio" }
+    val hasMultipleAudio = audioTracks.size > 1
+    val secondTrackIsEnglish = audioTracks.getOrNull(1)?.properties?.language == "eng"
+
+    return hasMultipleAudio && secondTrackIsEnglish
+}
+
+// Get MkvInfo and return tracks sorted by type
+fun getMkvInfoTracks(mkvPath: String): List<MkvTrack> {
+    val mkvFile = File(projectDir, mkvPath)
+
+    if (!mkvFile.exists()) {
+        return emptyList()
+    }
+
+    val mkvFileInfo = getMkvInfo(mkvFile)
+    val tracks = mkvFileInfo.tracks ?: emptyList()
+
+    // Sort tracks by type (video first, then audio, then subtitles)
+    val sortedTracks = tracks.sortedWith(compareBy<MkvTrack> { track ->
+        when (track.type) {
+            "video" -> 0
+            "audio" -> 1
+            "subtitles" -> 2
+            else -> 3
+        }
+    }.thenBy { it.id })
+
+    return sortedTracks
+}
+
+// Print the tracks information in a nice table
+fun printMkvInfoTracks(outputPath: String) {
+    val tracks = getMkvInfoTracks(outputPath)
+
+    val fileName = File(outputPath).name
+    val num_dashes = fileName.length + 15
+
+    println("\n".repeat(2))
+    println("+${"-".repeat(num_dashes)}")
+    println("| Tracks for $fileName")
+
+    tracks.forEach { track ->
+        println("+${"-".repeat(num_dashes + 2)}")
+        println("| Track #${track.id}  [${track.type}]  (${track.codec})")
+        track.properties?.let { props ->
+            val infoLines = mutableListOf<String>()
+            infoLines += "Language         : ${props.language ?: "und"}"
+            infoLines += "Name             : ${props.track_name ?: "N/A"}"
+            infoLines += "Default          : ${props.default_track ?: false}"
+            infoLines += "Forced           : ${props.forced_track ?: false}"
+
+            if (props.original_language != null) {
+                infoLines += "Original language: ${props.original_language}"
+            }
+            if (props.hearing_impaired_track != null) {
+                infoLines += "Hearing impaired : ${props.hearing_impaired_track}"
+            }
+
+            when (track.type) {
+                "video" -> {
+                    infoLines += "Dimensions       : ${props.pixel_dimensions ?: "N/A"}"
+                    infoLines += "Display          : ${props.display_dimensions ?: "N/A"}"
+                }
+                "audio" -> {
+                    infoLines += "Channels         : ${props.audio_channels ?: "N/A"}"
+                    infoLines += "Sample Rate      : ${props.audio_sampling_frequency ?: "N/A"}"
+                    infoLines += "Bits per Sample  : ${props.audio_bits_per_sample ?: "N/A"}"
+                }
+            }
+            infoLines.forEach { println("| $it") }
+        }
+    }
+
+    println("+${"-".repeat(num_dashes + 1)}")
 }
 
 
@@ -156,12 +237,15 @@ subs {
 
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
     mux {
+        // TODO: Add automated format extraction from premux file and update title
         title(get("title"))
 
         // Optionally specify mkvmerge version to use
         if (propertyExists("mkvmerge")) {
             mkvmerge(get("mkvmerge"))
         }
+
+        val premuxTracks = getMkvInfoTracks(get("premux").get())
 
         from(get("premux")) {
             tracks {
@@ -196,6 +280,18 @@ subs {
             }
         }
 
+        if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
+            from(forced_swap.item()) {
+                tracks {
+                    lang("eng")
+                    name(get("strack_ss"))
+                    default(false)
+                    forced(true)
+                    compression(CompressionType.ZLIB)
+                }
+            }
+        }
+
         chapters(chapters.item()) { lang("eng") }
 
         // Fonts handling
@@ -223,6 +319,10 @@ subs {
         }
 
         out(get("muxout"))
+
+        doLast {
+            printMkvInfoTracks(get("muxout").get())
+        }
     }
 
     // =================================================================================================================
@@ -283,7 +383,14 @@ subs {
         }
 
         mux {
+            // TODO: Add automated format extraction from premux file and update title
             title(get("title"))
+
+            if (propertyExists("mkvmerge")) {
+                mkvmerge(get("mkvmerge"))
+            }
+
+            val premuxTracks = getMkvInfoTracks(get("ncpremux").get())
 
             from(get("ncpremux")) {
                 tracks {
@@ -298,7 +405,7 @@ subs {
                 attachments { include(false) }
             }
 
-            from(cleanncmerge.item()) {
+            from(cleanmerge.item()) {
                 tracks {
                     lang("eng")
                     name(get("strack_reg"))
@@ -320,6 +427,18 @@ subs {
                 }
             }
 
+            if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
+                from(forced_swap.item()) {
+                    tracks {
+                        lang("eng")
+                        name(get("strack_ss"))
+                        default(false)
+                        forced(true)
+                        compression(CompressionType.ZLIB)
+                    }
+                }
+            }
+
             skipUnusedFonts(true)
 
             attach(get("ncfonts")) {
@@ -331,27 +450,10 @@ subs {
             }
 
             out(get("ncmuxout"))
-        }
-    }
 
-    // Upload files to sneak-peek Plex server
-    tasks(getList("episodes")) {
-        fun FTP.configure() {
-            host(get("ftp_host"))
-            port(getAs<Int>("ftp_port"))
-
-            username(get("ftp_user"))
-            password(get("ftp_pass"))
-
-            overwriteIf(OverwriteStrategy.ALWAYS)
-        }
-
-        val PlexUpload by task<FTP> {
-            from(mux.item())
-            configure()
-
-            // TODO: Figure out why this is not working
-            into(getRaw("ftp_filedir") + "/" + get("plexpath").get())
+            doLast {
+                printMkvInfoTracks(get("ncmuxout").get())
+            }
         }
     }
 }
