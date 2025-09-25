@@ -106,11 +106,36 @@ subs {
         chapterMarker("chapter")
     }
 
-    // Run swapper script for honorifics and other swaps
+    // Run swapper script for honorifics and other swaps (keys: "*" and "***").
     swap {
         from(cleanmerge.item())
 
         styles(Regex(".*"))
+
+        delimiter("*")
+        lineMarker("***")
+    }
+
+    // Remove dialogue lines from forced Signs & Song tracks.
+    val strip_dialogue by task<ASS> {
+        from(cleanmerge.item())
+        ass {events.lines.removeIf { it.isDialogue() } }
+    }
+
+    // Merge the forced track (if present) with the stripped dialogue.
+    val forced_merge by task<Merge> {
+        from(strip_dialogue.item())
+        fromIfPresent(getList("forced"), ignoreMissingFiles = true)
+    }
+
+    // Run swaps for the forced track (keys: "/" and "///").
+    val forced_swap by task<Swap> {
+        from(forced_merge.item())
+
+        styles(Regex(".*"))
+
+        delimiter("/")
+        lineMarker("///")
     }
 
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
@@ -211,10 +236,43 @@ subs {
             }
         }
 
-        val cleanncmerge by task<ASS> {
+        // Remove ktemplate and empty lines from the final output
+        val cleanmerge by task<ASS> {
             from(merge.item())
             // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
             ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
+        }
+
+        // Run swapper script for honorifics and other swaps (keys: "*" and "***").
+        swap {
+            from(cleanmerge.item())
+
+            styles(Regex(".*"))
+
+            delimiter("*")
+            lineMarker("***")
+        }
+
+        // Remove dialogue lines from forced Signs & Song tracks.
+        val strip_dialogue by task<ASS> {
+            from(cleanmerge.item())
+            ass {events.lines.removeIf { it.isDialogue() } }
+        }
+
+        // Merge the forced track (if present) with the stripped dialogue.
+        val forced_merge by task<Merge> {
+            from(strip_dialogue.item())
+            fromIfPresent(getList("forced"), ignoreMissingFiles = true)
+        }
+
+        // Run swaps for the forced track (keys: "/" and "///").
+        val forced_swap by task<Swap> {
+            from(forced_merge.item())
+
+            styles(Regex(".*"))
+
+            delimiter("/")
+            lineMarker("///")
         }
 
         mux {
