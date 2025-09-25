@@ -48,10 +48,16 @@ fun EventLine.isNegativeDuration(): Boolean {
     return this.end < this.start
 }
 
-// Define layout and playres values
-// Since we're authoring new scripts, these must be equal.
-val displayResX = 1920
-val displayResY = 1080
+// Check if a line has a zero duration.
+fun EventLine.isZeroDuration(): Boolean {
+    return this.end == this.start
+}
+
+// Check if a line is dialogue
+fun EventLine.isDialogue(): Boolean {
+    return this.style.matches(Regex("Main|Default|Alt"))
+}
+
 
 subs {
     readProperties("sub.properties", "../sekrit.properties")
