@@ -153,16 +153,7 @@ subs {
             }
 
             video {
-                lang("und")
-                name(get("vtrack"))
                 default(true)
-            }
-
-            audio {
-                lang("jpn")
-                name(get("atrack_reg"))
-                default(true)
-                forced(false)
             }
 
             includeChapters(false)
@@ -284,14 +275,6 @@ subs {
                 }
 
                 video {
-                    lang("jpn")
-                    name(get("vtrack"))
-                    default(true)
-                }
-
-                audio(0) {
-                    lang("jpn")
-                    name(get("atrack"))
                     default(true)
                 }
 
