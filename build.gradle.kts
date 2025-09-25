@@ -2,6 +2,7 @@ import myaa.subkt.ass.*
 import myaa.subkt.tasks.*
 import myaa.subkt.tasks.Mux.*
 import myaa.subkt.tasks.Nyaa.*
+import myaa.subkt.tasks.utils.*
 import java.awt.Color
 import java.time.*
 
@@ -14,6 +15,15 @@ fun ASSFile.getPlayRes(): Pair<Int?, Int?> {
     return this.scriptInfo.playResX to this.scriptInfo.playResY
 }
 
+// Check if the original ASS file and swapped ASS file are not equal
+fun assSwapNotEqual(ass1: ASS, ass2: Swap): Boolean {
+    val ass1File = ASSFile(ass1.out.singleFile)
+    val ass2File = ASSFile(ass2.out.singleFile)
+
+    return ass1File.events.lines != ass2File.events.lines
+}
+
+// Get the playRes values from the ASS file
 fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
     return ASSFile(File(this.get())).getPlayRes()
 }
@@ -289,6 +299,18 @@ subs {
                     default(true)
                     forced(false)
                     compression(CompressionType.ZLIB)
+                }
+            }
+
+            if (assSwapNotEqual(cleanmerge.item().get(), swap.item().get())) {
+                from(swap.item()) {
+                    subtitles {
+                        lang("enm")
+                        name(get("strack_hono"))
+                        default(true)
+                        forced(false)
+                        compression(CompressionType.ZLIB)
+                    }
                 }
             }
 
