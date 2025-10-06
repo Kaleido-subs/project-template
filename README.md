@@ -33,11 +33,11 @@ of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kale
 ```
 project-root/
 ├── build.gradle.kts           # SubKt Gradle build script
-├── sub.properties            # Project configuration
-├── common/                   # Shared resources
-│   ├── warning.ass          # Optional player warning
-│   └── fonts/               # Common fonts
-├── 01/                      # Episode directory
+├── sub.properties             # Project configuration
+├── common/                    # Shared resources
+│   ├── warning.ass            # Optional player warning
+│   └── fonts/                 # Common fonts
+├── 01/                        # Episode directory
 │   ├── NewShow - 01 - (Premux) [ABCDEF01].mkv
 │   ├── NewShow - 01 - Dialogue.ass
 │   ├── NewShow - 01 - TS.ass
@@ -46,11 +46,21 @@ project-root/
 │   ├── NewShow - 01 - INS (ED).ass       # Optional
 │   ├── NewShow - 01 - Extra.ass          # Optional
 │   └── fonts/                            # Episode-specific fonts
-└── build/                   # Generated output
-    └── 01/                 # Episode build artifacts
+├── NCED1/                     # NCED1 directory
+│   ├── NewShow - NCED1 - Lyrics.ass
+│   ├── NewShow - NCED1 - TS.ass          # Optional
+│   └── fonts/                            # NCED-specific fonts
+├── NCOP1/                     # NCOP1 directory
+│   ├── NewShow - NCOP1 - Lyrics.ass
+│   ├── NewShow - NCOP1 - TS.ass          # Optional
+│   └── fonts/                            # NCOP-specific fonts
+└── build/                     # Generated output
+    └── ...                    # Episode build artifacts
 ```
 
 ### File Naming Requirements
+
+#### Episode files
 
 - **Video files:** `ShowName - XX - (Premux) [CRC32].mkv`
 - **Dialogue:** `ShowName - XX - Dialogue.ass`
@@ -61,8 +71,30 @@ project-root/
 > [!NOTE]
 >
 > - Replace `XX` with the episode number (zero-padded)
-> - CRC32 is optional but recommended
+> - CRC32 in the premux file is optional but recommended
 > - Author tags in TS files should match contributor names
+
+#### NCOP/NCED files
+
+- `ShowName - XX.ass`
+
+> [!NOTE]
+>
+> - Replace `XX` with the OP/ED number
+> - It accepts any number of NCOP/NCED files, and they will all be merged together before being synced.
+
+**Example of NCOP1 with a lyrics file and a TS file:**
+
+- `NCOP1/NewShow - NCOP1 - Lyrics.ass`
+- `NCOP1/NewShow - NCOP1 - TS.ass`
+
+The following is also valid:
+
+- `NCOP1/NewShow - NCOP1.ass`
+- `NCOP1/NewShow - NCOP1 - TS.ass`
+
+Only one file may have `opsync` or `edsync` in the effect field.
+It's highly recommended to set it in the _lyrics_ file.
 
 ## Getting Started
 

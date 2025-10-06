@@ -153,19 +153,28 @@ subs {
         }
     }
 
+    // Pre-merge OP and ED files so multiple components can be merged at once easily
+    val premerge_op by task<Merge> {
+        fromIfPresent(getList("OP"), ignoreMissingFiles = true)
+    }
+
+    val premerge_ed by task<Merge> {
+        fromIfPresent(getList("ED"), ignoreMissingFiles = true)
+    }
+
     // Merge all the individual script components
     merge {
         from(layerDialogue.item())
 
         if (propertyExists("OP")) {
-            from(get("OP")) {
+            from(premerge_op.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("opsync")
             }
         }
 
         if (propertyExists("ED")) {
-            from(get("ED")) {
+            from(premerge_ed.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("edsync")
             }
