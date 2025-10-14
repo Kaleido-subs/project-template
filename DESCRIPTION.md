@@ -68,5 +68,5 @@ you can ask us to render out our song styling for you in our [Discord server][di
 [mediainfo]: if-you-see-this-I-forgor-sorry
 
 [//]: <> (Other)
-[discord]: https://discord.gg/dk7aadV
+[discord]: https://discord.com/servers/stalleido-subs-443264565069742080
 [mpv]: https://mpv.io/
