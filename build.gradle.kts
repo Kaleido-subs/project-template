@@ -16,17 +16,16 @@ fun ASSFile.getPlayRes(): Pair<Int?, Int?> {
     return this.scriptInfo.playResX to this.scriptInfo.playResY
 }
 
+fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
+    return ASSFile(File(this.get())).getPlayRes()
+}
+
 // Check if the original ASS file and swapped ASS file are not equal
 fun assSwapNotEqual(ass1: ASS, ass2: Swap): Boolean {
     val ass1File = ASSFile(ass1.out.singleFile)
     val ass2File = ASSFile(ass2.out.singleFile)
 
     return ass1File.events.lines != ass2File.events.lines
-}
-
-// Get the playRes values from the ASS file
-fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
-    return ASSFile(File(this.get())).getPlayRes()
 }
 
 // Check whether a string contains parts of a ktemplate
@@ -58,7 +57,6 @@ fun EventLine.isZeroDuration(): Boolean {
 fun EventLine.isDialogue(): Boolean {
     return this.style.matches(Regex("Main|Default|Alt"))
 }
-
 
 // Check if premux has multiple audio tracks with English as second track
 fun includeForcedTrack(sortedTracks: List<MkvTrack>): Boolean {
@@ -144,11 +142,13 @@ subs {
     readProperties("sub.properties", "../sekrit.properties")
     episodes(getList("episodes"))
 
+    // default to TV
+    // allow specifying using -Prelease=foo
+    release(arg("release") ?: "default")
+
     val layerDialogue by task<ASS> {
         from(get("dialogue"))
         ass {
-            // could just use incrementLayer in merge.from,
-            // but apparently comments having non-zero layer is ugly, so no
             events.lines.filter { !it.comment || it.effect == "***" }.forEach { it.layer += 69 }
         }
     }
@@ -166,6 +166,9 @@ subs {
     merge {
         from(layerDialogue.item())
 
+        fromIfPresent(getList("extra"), ignoreMissingFiles = true)
+        fromIfPresent(getList("TS"), ignoreMissingFiles = true)
+
         if (propertyExists("OP")) {
             from(premerge_op.item()) {
                 syncSourceLine("sync")
@@ -180,9 +183,6 @@ subs {
             }
         }
 
-        fromIfPresent(getList("extra"), ignoreMissingFiles = true)
-        fromIfPresent(getList("TS"), ignoreMissingFiles = true)
-
         fromIfPresent(getList("INS"), ignoreMissingFiles = true) {
             incrementLayer(20)
         }
@@ -192,10 +192,14 @@ subs {
         includeExtraData(false)
         includeProjectGarbage(false)
 
+        val (resX, resY) = get("dialogue").getPlayRes()
+
         scriptInfo {
             title = get("group").get()
             scaledBorderAndShadow = true
             wrapStyle = WrapStyle.NO_WRAP
+            values["LayoutResX"] = resX ?: -1
+            values["LayoutResY"] = resY ?: -1
         }
     }
 
@@ -259,10 +263,6 @@ subs {
         from(get("premux")) {
             tracks {
                 include(track.type == TrackType.VIDEO || track.type == TrackType.AUDIO)
-            }
-
-            video {
-                default(true)
             }
 
             includeChapters(false)
@@ -338,17 +338,20 @@ subs {
     // NCOP/EDs
     tasks(getList("ncs")) {
         merge {
-            from(get("ncsubs"))
-
-            fromIfPresent(get("ncts"))
+            fromIfPresent(getList("ncsubs"), ignoreMissingFiles = true)
 
             includeExtraData(false)
             includeProjectGarbage(false)
+
+            val ncsubPath = getList("ncsubs").orNull?.firstOrNull()
+            val (resX, resY) = ncsubPath?.let { ASSFile(File(it)).getPlayRes() } ?: (null to null)
 
             scriptInfo {
                 title = get("group").get()
                 scaledBorderAndShadow = true
                 wrapStyle = WrapStyle.NO_WRAP
+                values["LayoutResX"] = resX ?: -1
+                values["LayoutResY"] = resY ?: -1
             }
         }
 
@@ -406,10 +409,6 @@ subs {
                     include(track.type == TrackType.VIDEO || track.type == TrackType.AUDIO)
                 }
 
-                video {
-                    default(true)
-                }
-
                 includeChapters(false)
                 attachments { include(false) }
             }
@@ -424,15 +423,14 @@ subs {
                 }
             }
 
-            if (assSwapNotEqual(cleanmerge.item().get(), swap.item().get())) {
-                from(swap.item()) {
-                    subtitles {
-                        lang("enm")
-                        name(get("strack_hono"))
-                        default(true)
-                        forced(false)
-                        compression(CompressionType.ZLIB)
-                    }
+            // TODO: Add automated comparison that actually works to see if a swap is required.
+            from(swap.item()) {
+                subtitles {
+                    lang("enm")
+                    name(get("strack_hono"))
+                    default(true)
+                    forced(false)
+                    compression(CompressionType.ZLIB)
                 }
             }
 
