@@ -32,30 +32,30 @@ of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kale
 
 ```
 project-root/
-├── build.gradle.kts           # SubKt Gradle build script
-├── sub.properties             # Project configuration
-├── common/                    # Shared resources
-│   ├── warning.ass            # Optional player warning
-│   └── fonts/                 # Common fonts
-├── 01/                        # Episode directory
+├── build.gradle.kts                      # SubKt Gradle build script
+├── sub.properties                        # Project configuration
+├── common/                               # Shared resources
+│   ├── warning.ass                       # Optional player warning
+│   └── fonts/                            # Common fonts
+├── 01/                                   # Episode directory
 │   ├── NewShow - 01 - (Premux) [ABCDEF01].mkv
 │   ├── NewShow - 01 - Dialogue.ass
 │   ├── NewShow - 01 - TS.ass
-│   ├── NewShow - 01 - TS (Light).ass     # Multiple TS allowed
+│   ├── NewShow - 01 - TS (Author).ass    # Multiple TS allowed
 │   ├── NewShow - 01 - INS (OP).ass       # Optional
 │   ├── NewShow - 01 - INS (ED).ass       # Optional
 │   ├── NewShow - 01 - Extra.ass          # Optional
 │   └── fonts/                            # Episode-specific fonts
-├── NCED1/                     # NCED1 directory
+├── NCED1/                                # NCED1 directory
 │   ├── NewShow - NCED1 - Lyrics.ass
 │   ├── NewShow - NCED1 - TS.ass          # Optional
 │   └── fonts/                            # NCED-specific fonts
-├── NCOP1/                     # NCOP1 directory
+├── NCOP1/                                # NCOP1 directory
 │   ├── NewShow - NCOP1 - Lyrics.ass
 │   ├── NewShow - NCOP1 - TS.ass          # Optional
 │   └── fonts/                            # NCOP-specific fonts
-└── build/                     # Generated output
-    └── ...                    # Episode build artifacts
+└── build/                                # Generated output
+    └── ...                               # Episode build artifacts
 ```
 
 ### File Naming Requirements
@@ -65,7 +65,7 @@ project-root/
 - **Video files:** `ShowName - XX - (Premux) [CRC32].mkv`
 - **Dialogue:** `ShowName - XX - Dialogue.ass`
 - **Typesetting:** `ShowName - XX - TS.ass` or `ShowName - XX - TS (Author).ass`
-- **Insert Songs:** `ShowName - XX - INS (Description).ass`
+- **Insert Songs:** `ShowName - XX - INS (Song Name).ass`
 - **Extra:** `ShowName - XX - Extra.ass`
 
 > [!NOTE]
@@ -155,6 +155,7 @@ It's highly recommended to set it in the _lyrics_ file.
    - Ensure no UTF-16 BOM in subtitle files
 
 2. **Mux Errors:**
+
    - Verify mkvmerge is in PATH
    - Check premux file exists and is readable
    - Ensure all referenced fonts exist

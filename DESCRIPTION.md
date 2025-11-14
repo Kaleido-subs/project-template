@@ -23,7 +23,7 @@
 
 |                  | **Information**              |
 | ---------------- | ---------------------------- |
-| **Sources**      | [WEB (x)][websrc]            |
+| **Sources**      | [BD (x)][bdsrc]            |
 | **Resolution**   | 1920x1080p                   |
 | **Codec**        | H.265 (x265) 10-bit          |
 | **Aspect Ratio** | 16:9                         |
@@ -34,7 +34,7 @@
 
 | Track        | Codec | Channels | Bitrate  | Source            | Default | Forced |
 | ------------ | ----- | -------- | -------- | ----------------- | ------- | ------ |
-| **Japanese** | AAC   | 2.0      | 256 kbps | [WEB (x)][websrc] | Yes     | No     |
+| **Japanese** | Opus  | 2.0      | 192 kbps | [BD (x)][bdsrc] | Yes     | No     |
 
 ### Subtitles
 
@@ -61,7 +61,7 @@ you can ask us to render out our song styling for you in our [Discord server][di
 [tvdb-order]: https://thetvdb.com/series/xxxxx/allseasons/official
 
 [//]: <> (Sources)
-[websrc]: -
+[bdsrc]: -
 
 [//]: <> (Encode info)
 [slowpics]: if-you-see-this-I-forgor-sorry

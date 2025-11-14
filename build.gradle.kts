@@ -20,14 +20,6 @@ fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
     return ASSFile(file(this.get())).getPlayRes()
 }
 
-// Check if the original ASS file and swapped ASS file are not equal
-fun assSwapNotEqual(ass1: ASS, ass2: Swap): Boolean {
-    val ass1File = ASSFile(ass1.out.singleFile)
-    val ass2File = ASSFile(ass2.out.singleFile)
-
-    return ass1File.events.lines != ass2File.events.lines
-}
-
 // Check whether a string contains parts of a ktemplate
 fun String.isKaraTemplate(): Boolean {
     return this.startsWith("code") || this.startsWith("template") || this.startsWith("mixin")
