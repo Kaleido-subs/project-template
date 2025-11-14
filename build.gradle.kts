@@ -17,7 +17,7 @@ fun ASSFile.getPlayRes(): Pair<Int?, Int?> {
 }
 
 fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
-    return ASSFile(File(this.get())).getPlayRes()
+    return ASSFile(file(this.get())).getPlayRes()
 }
 
 // Check if the original ASS file and swapped ASS file are not equal
