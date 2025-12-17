@@ -1,6 +1,6 @@
 # The Kaleido SubKt Project template
 
-[![SubKt Compatibility](https://img.shields.io/badge/SubKt-1.20.1-blue)](https://github.com/TypesettingTools/SubKt)
+[![SubKt Compatibility](https://img.shields.io/badge/SubKt-0.1.27-blue)](https://github.com/LightArrowsEXE/SubKt)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Clone this repo
