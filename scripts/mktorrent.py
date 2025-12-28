@@ -16,6 +16,7 @@ except ImportError:
 
 TRACKERS = [
     "http://nyaa.tracker.wf:7777/announce",
+    "https://tracker.nekobt.to/api/tracker/public/announce",
     "udp://open.stealth.si:80/announce",
     "udp://tracker.opentrackr.org:1337/announce",
     "udp://exodus.desync.com:6969/announce",
