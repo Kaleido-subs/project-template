@@ -324,6 +324,37 @@ subs {
         doLast {
             printMkvInfoTracks(get("muxout").get())
         }
+
+    torrent {
+        trackers(getList("trackers"))
+        from(mux.item())
+        out(get("torrent_out"))
+    }
+
+    batchtasks {
+        torrent {
+            trackers(getList("trackers"))
+            from(mux.batchItems())
+            into(get("muxdir"))
+            out(get("torrent_out"))
+        }
+    }
+
+    alltasks {
+        nyaa {
+            from(torrent.item())
+
+            username(get("nyaauser"))
+            password(get("nyaapass"))
+
+            category(NyaaCategories.ANIME_ENGLISH)
+
+            torrentName(get("torrent_title"))
+            torrentDescription(file(get("torrent_desc").get()).readText())
+            information(get("discord_url"))
+
+            hidden(true)
+        }
     }
 
     // =================================================================================================================
