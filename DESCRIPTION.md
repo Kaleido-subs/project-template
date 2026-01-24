@@ -23,7 +23,7 @@
 
 |                  | **Information**              |
 | ---------------- | ---------------------------- |
-| **Sources**      | [BD (x)][bdsrc]            |
+| **Sources**      | [BD (x)][bdsrc]              |
 | **Resolution**   | 1920x1080p                   |
 | **Codec**        | H.265 (x265) 10-bit          |
 | **Aspect Ratio** | 16:9                         |
@@ -32,8 +32,8 @@
 
 ### Audio
 
-| Track        | Codec | Channels | Bitrate  | Source            | Default | Forced |
-| ------------ | ----- | -------- | -------- | ----------------- | ------- | ------ |
+| Track        | Codec | Channels | Bitrate  | Source          | Default | Forced |
+| ------------ | ----- | -------- | -------- | ----------------| ------- | ------ |
 | **Japanese** | Opus  | 2.0      | 192 kbps | [BD (x)][bdsrc] | Yes     | No     |
 
 ### Subtitles
