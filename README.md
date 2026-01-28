@@ -206,6 +206,49 @@ which must be manually set before running the script.
 Currently, the following urls are required,
 although you can modify it after as necessary.
 
+## Setting local.properties
+
+The `local.properties` file is not included in this repository.
+If you want to use custom local settings,
+you should create this file in the project root directory.
+This allows you to override specific properties locally
+without the risk of accidentally committing them to the repository.
+
+This is read after the `sub.properties` file,
+and overrides any properties set in that file.
+
+### Example pointing premux directory to a network drive
+
+
+```kotlin
+# local.properties file in project root directory.
+premux=Z:/share/private/Premuxes/show_title/premux/*${tvdb}* (premux)*.mkv
+{SP*}.premux=Z:/share/private/Premuxes/show_title/premux/Specials/*${tvdb}* (premux)*.mkv
+ncpremux=Z:/share/private/Premuxes/show_title/premux/Extras/*${episode}* (premux)*.mkv
+
+mini.*.premux=Z:/share/private/Premuxes/show_title/premux (AV1)/*${tvdb}* (Mini Premux)*.mkv
+mini.{SP*}.premux=Z:/share/private/Premuxes/show_title/premux (AV1)/Specials/*${tvdb}* (Mini Premux)*.mkv
+mini.*.ncpremux=Z:/share/private/Premuxes/show_title/premux (AV1)/Extras/*${episode}* (Mini Premux)*.mkv
+```
+
+## Setting sekrit.properties
+
+The `sekrit.properties` file is not included in this repository.
+This properties file is used to store your Nyaa username and password,
+as well as other sensitive information.
+By default, this file will be read from a directory above the project root directory.
+
+This is read after the `sub.properties` and `local.properties` files,
+and overrides any properties set in those files.
+
+### Example setting Nyaa username and password
+
+```kotlin
+# sekrit.properties file in the directory above the project root directory.
+nyaauser=YourUsername
+nyaapass=YourPassword
+```
+
 ## Contributing
 
 Spot an issue in the build scripts?
