@@ -160,11 +160,11 @@ It's highly recommended to set it in the _lyrics_ file.
    - Check premux file exists and is readable
    - Ensure all referenced fonts exist
 
-### Scripts & Hooks
+## Scripts & Hooks
 
 This template comes with multiple scripts and hooks.
 
-#### no-common-fonts
+### no-common-fonts
 
 A pre-commit hook
 that checks if any pushed fonts
@@ -173,15 +173,7 @@ This is to prevent users from pushing duplicate fonts
 and potentially overriding dialogue fonts
 with different versions of the font.
 
-#### project_setup
-
-A simple shell script that updates the local git config
-to filter commits using `scripts/clean_project_garbage.sh`.
-This will filter out Aegisub project garbage metadata
-so users won't keep overriding this with their own premux locations
-and other local metadata.
-
-#### blank_dialogue
+### blank_dialogue
 
 Replaces the given .ass subtitle file with:
 
@@ -192,7 +184,27 @@ Replaces the given .ass subtitle file with:
 The original file is overwritten in-place.
 This is used to blank out for example official scripts
 while preserving their timing
-to use for original translations.
+to use as a base for original translations.
+
+### project_setup
+
+A simple shell script that updates the local git config
+to filter commits using `scripts/clean_project_garbage.sh`.
+This will filter out Aegisub project garbage metadata
+so users won't keep overriding that
+with their own premux locations and other local metadata.
+As such, it's highly recommended
+that everyone on the team runs this script.
+
+### releasepost
+
+A simple Python script to generate our common release post template.
+It will ask for nyaa and neko urls,
+and create a /release command for [Nino](https://github.com/9vult/nino)
+and tweet for X or BlueSky, including hashtags
+which must be manually set before running the script.
+Currently, the following urls are required,
+although you can modify it after as necessary.
 
 ## Contributing
 
