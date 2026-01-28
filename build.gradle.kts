@@ -131,7 +131,7 @@ fun printMkvInfoTracks(outputPath: String) {
 
 
 subs {
-    readProperties("sub.properties", "../sekrit.properties")
+    readProperties("sub.properties", "local.properties", "../sekrit.properties")
     episodes(getList("episodes"))
 
     // default to TV
