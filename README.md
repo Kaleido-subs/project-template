@@ -206,6 +206,17 @@ which must be manually set before running the script.
 Currently, the following urls are required,
 although you can modify it after as necessary.
 
+### tl_memory
+
+A simple Python script to help you find matches between the TL and CCs.
+It will find all lines that match the search term in the TL and CCs,
+and find an accompanying line in the other file.
+You can look up both English and Japanese words,
+and increase the context window to see more lines around the match.
+
+![tl_memory example](https://i.imgur.com/8I7g7tB.png)
+![tl_memory example](https://i.imgur.com/AMgvUWM.png)
+
 ## Setting local.properties
 
 The `local.properties` file is not included in this repository.
@@ -218,7 +229,6 @@ This is read after the `sub.properties` file,
 and overrides any properties set in that file.
 
 ### Example pointing premux directory to a network drive
-
 
 ```kotlin
 # local.properties file in project root directory.
