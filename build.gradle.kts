@@ -129,7 +129,6 @@ fun printMkvInfoTracks(outputPath: String) {
     println("+${"-".repeat(num_dashes + 1)}")
 }
 
-
 subs {
     readProperties("sub.properties", "local.properties", "../sekrit.properties")
     episodes(getList("episodes"))
@@ -221,7 +220,7 @@ subs {
     // Remove dialogue lines from forced Signs & Song tracks.
     val strip_dialogue by task<ASS> {
         from(cleanmerge.item())
-        ass {events.lines.removeIf { it.isDialogue() } }
+        ass { events.lines.removeIf { it.isDialogue() } }
     }
 
     // Merge the forced track (if present) with the stripped dialogue.
@@ -324,6 +323,7 @@ subs {
         doLast {
             printMkvInfoTracks(get("muxout").get())
         }
+    }
 
     torrent {
         trackers(getList("trackers"))
@@ -398,7 +398,7 @@ subs {
         // Remove dialogue lines from forced Signs & Song tracks.
         val strip_dialogue by task<ASS> {
             from(cleanmerge.item())
-            ass {events.lines.removeIf { it.isDialogue() } }
+            ass { events.lines.removeIf { it.isDialogue() } }
         }
 
         // Merge the forced track (if present) with the stripped dialogue.
