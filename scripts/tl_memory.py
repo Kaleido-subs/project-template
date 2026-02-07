@@ -85,15 +85,15 @@ parser.add_argument(
 )
 parser.add_argument(
     "-p",
-    "--previous-seasons",
+    "--previous_seasons",
     action="store_true",
     help="Include episodes from previous seasons in the search.",
 )
 parser.add_argument(
     "-x",
-    "--exact",
+    "--whole_words",
     action="store_true",
-    help="Only match the exact term as a whole word (case-insensitive).",
+    help="Only match the exact string as a whole word (case-insensitive).",
 )
 
 args = parser.parse_args()
