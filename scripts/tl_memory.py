@@ -89,6 +89,12 @@ parser.add_argument(
     action="store_true",
     help="Include episodes from previous seasons in the search.",
 )
+parser.add_argument(
+    "-x",
+    "--exact",
+    action="store_true",
+    help="Only match the exact term as a whole word (case-insensitive).",
+)
 
 args = parser.parse_args()
 
@@ -211,8 +217,12 @@ def episode_matches(episode: str) -> bool:
 def find_matches(
     events: list[SubtitleEvent], term: str
 ) -> list[tuple[int, SubtitleEvent]]:
-    low = term.lower()
-    return [(i, e) for i, e in enumerate(events) if low in e.text.lower()]
+    if getattr(args, "exact", False):
+        pattern = re.compile(rf"\b{re.escape(term)}\b", re.IGNORECASE)
+        return [(i, e) for i, e in enumerate(events) if pattern.search(e.text)]
+    else:
+        low = term.lower()
+        return [(i, e) for i, e in enumerate(events) if low in e.text.lower()]
 
 
 def format_ts(seconds: float) -> str:
@@ -324,9 +334,13 @@ def _append_segment_with_search(
 
 def _text_with_highlight(text: str, search_term: str | None) -> Text:
     result = Text()
-    search_pattern = (
-        re.compile(re.escape(search_term), re.IGNORECASE) if search_term else None
-    )
+    if not search_term:
+        search_pattern = None
+    else:
+        if getattr(args, "exact", False):
+            search_pattern = re.compile(rf"\b{re.escape(search_term)}\b", re.IGNORECASE)
+        else:
+            search_pattern = re.compile(re.escape(search_term), re.IGNORECASE)
     last = 0
 
     for start, end in _find_brace_spans(text):
