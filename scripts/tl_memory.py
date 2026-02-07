@@ -57,12 +57,39 @@ theme = Theme(
 if __name__ != "__main__":
     raise ImportError("This script is not meant to be imported!")
 
-parser = argparse.ArgumentParser()
-parser.add_argument("search_term")
-parser.add_argument("-E", "--episode", type=int)
-parser.add_argument("-m", "--max-episode", type=int)
-parser.add_argument("-C", "--context", type=int, default=0)
-parser.add_argument("-p", "--previous-seasons", action="store_true")
+parser = argparse.ArgumentParser(
+    description="Search for subtitle events in dialogue and CC files."
+)
+parser.add_argument(
+    "search_term",
+    help="The term to search for in the subtitle files.",
+)
+parser.add_argument(
+    "-E",
+    "--episode",
+    type=int,
+    help="Specify a specific episode number to search in.",
+)
+parser.add_argument(
+    "-m",
+    "--max-episode",
+    type=int,
+    help="Specify the maximum episode number to search up to.",
+)
+parser.add_argument(
+    "-C",
+    "--context",
+    type=int,
+    default=0,
+    help="Number of context lines to show before and after a match.",
+)
+parser.add_argument(
+    "-p",
+    "--previous-seasons",
+    action="store_true",
+    help="Include episodes from previous seasons in the search.",
+)
+
 args = parser.parse_args()
 
 
