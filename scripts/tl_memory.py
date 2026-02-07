@@ -25,28 +25,9 @@ from rich.theme import Theme
 from rich.text import Text
 
 
-# Constants. Adjust these based on your filename structure. You can use * as a wildcard.
-
-DIALOGUE_FILENAME_GLOB = "FSF - S*E{episode} - Dialogue.ass"
-CC_FILENAME_GLOB = (
-    "TVアニメ『Fate_strange.Fake』.S*E{episode}.*.WEBRip.Netflix.ja[cc].srt"
-)
-
-# Do not touch anything below this comment!
-
-RE_FORMATTING_TAG = re.compile(r"^\{[^}]*\}")
-RE_JP_ACTOR = re.compile(r"^[（(]([^\s）)]+)[）)]\s*")
-RE_COLON_ACTOR = re.compile(r"^([^\W\d_][\w\u201c\u201d]{0,23}):\s*", re.UNICODE)
-
-if __name__ != "__main__":
-    raise ImportError("This script is not meant to be imported!")
-
-parser = argparse.ArgumentParser()
-parser.add_argument("search_term")
-parser.add_argument("-E", "--episode", type=int)
-parser.add_argument("-m", "--max-episode", type=int)
-parser.add_argument("-C", "--context", type=int, default=0)
-args = parser.parse_args()
+# Constants. Adjust for your filename structure. Use * as wildcard; {episode} for episode number.
+DIALOGUE_FILENAME_GLOB = "* - Dialogue.ass"
+CC_FILENAME_GLOB = "* - Closed Captions *.*"
 
 
 class SrtHighlighter(RegexHighlighter):
@@ -60,15 +41,7 @@ class SrtHighlighter(RegexHighlighter):
     ]
 
 
-class AssHighlighter(RegexHighlighter):
-    base_style = "ass."
-    highlights = [
-        r"(?P<comment>\{.+?\})",
-        r"(?P<newline>\\[nN])",
-        r"(?P<actor>^(?!\[\d).*?:)",
-    ]
-
-
+# You can adjust the theme here.
 theme = Theme(
     {
         "ass.comment": "dim white",
@@ -78,12 +51,42 @@ theme = Theme(
         "inline_comment": "dim bright_black",
     }
 )
+
+#! ------ Do not touch anything below this comment!
+
+if __name__ != "__main__":
+    raise ImportError("This script is not meant to be imported!")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("search_term")
+parser.add_argument("-E", "--episode", type=int)
+parser.add_argument("-m", "--max-episode", type=int)
+parser.add_argument("-C", "--context", type=int, default=0)
+parser.add_argument("-p", "--previous-seasons", action="store_true")
+args = parser.parse_args()
+
+
+class AssHighlighter(RegexHighlighter):
+    base_style = "ass."
+    highlights = [
+        r"(?P<comment>\{.+?\})",
+        r"(?P<newline>\\[nN])",
+        r"(?P<actor>^(?!\[\d).*?:)",
+    ]
+
+
 ass_highlighter = AssHighlighter()
 srt_highlighter = SrtHighlighter()
+
 highlighter_by_ext: dict[str, RegexHighlighter] = {
     ".ass": ass_highlighter,
     ".srt": srt_highlighter,
 }
+
+
+RE_FORMATTING_TAG = re.compile(r"^\{[^}]*\}")
+RE_JP_ACTOR = re.compile(r"^[（(]([^\s）)]+)[）)]\s*")
+RE_COLON_ACTOR = re.compile(r"^([^\W\d_][\w\u201c\u201d]{0,23}):\s*", re.UNICODE)
 
 
 class SubtitleEvent:
@@ -128,11 +131,13 @@ def _extract_actor_from_text(
     )
 
     m_jp = RE_JP_ACTOR.match(after_tag)
+
     if m_jp:
         actor = actor or m_jp.group(1).strip()
         after_tag = after_tag[m_jp.end() :].lstrip()
     else:
         m_colon = RE_COLON_ACTOR.match(after_tag)
+
         if m_colon:
             actor = actor or m_colon.group(1).strip()
             after_tag = after_tag[m_colon.end() :].lstrip()
@@ -141,7 +146,9 @@ def _extract_actor_from_text(
         text[len(formatting_match.group(0)) :].lstrip() if formatting_match else text
     ):
         out = (formatting_match.group(0) + after_tag) if formatting_match else after_tag
+
         return out, actor
+
     return text, actor
 
 
@@ -155,15 +162,22 @@ def get_first_file(pattern: str) -> Path | None:
 
 
 def episode_matches(episode: str) -> bool:
-    if not episode.isdigit():
+    ep_for_filter = episode.split("/")[-1] if "/" in episode else episode
+
+    if not ep_for_filter.isdigit():
         if args.episode is not None:
             return False
+
         return True
-    ep_num = int(episode)
+
+    ep_num = int(ep_for_filter)
+
     if args.episode is not None and ep_num != args.episode:
         return False
+
     if args.max_episode is not None and ep_num > args.max_episode:
         return False
+
     return True
 
 
@@ -188,6 +202,7 @@ def ass_events(path: Path) -> list[SubtitleEvent]:
         return []
 
     events: list[SubtitleEvent] = []
+
     for e in doc.events:
         actor_field = getattr(e, "actor", None) or getattr(e, "name", None)
         actor = (actor_field or "").strip() or None
@@ -203,6 +218,7 @@ def ass_events(path: Path) -> list[SubtitleEvent]:
                 actor=actor,
             )
         )
+
     return events
 
 
@@ -214,9 +230,11 @@ def srt_events(path: Path) -> list[SubtitleEvent]:
         return []
 
     events = []
+
     for s in srt.parse(content):
         text = clean_text(s.content)
         text, actor = _extract_actor_from_text(text, None)
+
         events.append(
             SubtitleEvent(
                 s.start.total_seconds(),
@@ -226,29 +244,37 @@ def srt_events(path: Path) -> list[SubtitleEvent]:
                 actor=actor,
             )
         )
+
     return events
 
 
 def _find_brace_spans(text: str) -> list[tuple[int, int]]:
     spans = []
     i = 0
+
     while i < len(text):
         if text[i] != "{":
             i += 1
             continue
+
         start = i
         depth = 1
         i += 1
+
         while i < len(text) and depth > 0:
             if text[i] == "{":
                 depth += 1
             elif text[i] == "}":
                 depth -= 1
+
                 if depth == 0:
                     spans.append((start, i + 1))
                     break
+
             i += 1
+
         i += 1
+
     return spans
 
 
@@ -258,11 +284,14 @@ def _append_segment_with_search(
     if not search_pattern:
         result.append(segment)
         return
+
     seg_last = 0
+
     for m in search_pattern.finditer(segment):
         result.append(segment[seg_last : m.start()])
         result.append(segment[m.start() : m.end()], style="search_match")
         seg_last = m.end()
+
     result.append(segment[seg_last:])
 
 
@@ -272,11 +301,14 @@ def _text_with_highlight(text: str, search_term: str | None) -> Text:
         re.compile(re.escape(search_term), re.IGNORECASE) if search_term else None
     )
     last = 0
+
     for start, end in _find_brace_spans(text):
         _append_segment_with_search(result, text[last:start], search_pattern)
         result.append(text[start:end], style="inline_comment")
         last = end
+
     _append_segment_with_search(result, text[last:], search_pattern)
+
     return result
 
 
@@ -290,16 +322,19 @@ def print_event_line(
 ) -> None:
     tag_part = Text(f"{tag}: ", style="green") if tag else Text()
     prefix = Text(indent) + tag_part
+
     rest = (
         _text_with_highlight(event.text, search_term)
         if search_term
         else Text(event.text)
     )
+
     if event.actor:
         actor_part = Text(f"({event.actor}) ", style="ass.actor")
         line = prefix + actor_part + rest
     else:
         line = prefix + rest
+
     console.print(line)
 
 
@@ -311,9 +346,12 @@ def search_episode(
     context: int,
 ) -> None:
     a_events, b_events = a["events"], b["events"]
+
     if not a_events or not episode_matches(episode):
         return
+
     matches = find_matches(a_events, args.search_term)
+
     if not matches:
         return
 
@@ -341,11 +379,14 @@ def search_episode(
 
         cc_lines: list[SubtitleEvent] = []
         seen_cc: set[int] = set()
+
         for i in tl_indices:
             ev = a_events[i]
+
             for be in b_events:
                 if ev.start <= be.end and be.start <= ev.end:
                     be_id = id(be)
+
                     if be_id not in seen_cc:
                         seen_cc.add(be_id)
                         cc_lines.append(be)
@@ -360,14 +401,53 @@ def discover_episodes() -> list[str]:
     )
 
 
-def collect_files(episode: str) -> tuple[Path | None, Path | None]:
-    prefix = Path(episode)
-    cc = get_first_file(
-        str(prefix / CC_FILENAME_GLOB.format(episode=episode))
-    ) or get_first_file(str(prefix / "*.srt"))
-    dl = get_first_file(
-        str(prefix / DIALOGUE_FILENAME_GLOB.format(episode=episode))
-    ) or get_first_file(str(prefix / "*.ass"))
+def discover_previous_seasons() -> list[tuple[Path, str]]:
+    parent = Path.cwd().parent
+    current_name = Path.cwd().name
+    pairs: list[tuple[Path, str]] = []
+
+    for path in sorted(parent.iterdir()):
+        if not path.is_dir() or path.name == current_name:
+            continue
+
+        episode_dirs = sorted(
+            p.name for p in path.iterdir() if p.is_dir() and is_episode(p.name)
+        )
+
+        if episode_dirs:
+            for ep in episode_dirs:
+                pairs.append((path, ep))
+        else:
+            # Movie/special dir: files live directly in the dir
+            if any(path.glob("*.ass")) or any(path.glob("*.srt")):
+                pairs.append((path, ""))
+
+    return pairs
+
+
+def collect_files(
+    episode: str, base: Path | None = None
+) -> tuple[Path | None, Path | None]:
+    if base is None:
+        prefix = Path(episode)
+    else:
+        prefix = base / episode if episode else base
+
+    cc_glob = (
+        CC_FILENAME_GLOB.format(episode=episode)
+        if "{episode}" in CC_FILENAME_GLOB and episode
+        else ("* - S*E* - Closed Captions *.*" if not episode else CC_FILENAME_GLOB)
+    )
+
+    dl_glob = (
+        DIALOGUE_FILENAME_GLOB.format(episode=episode)
+        if "{episode}" in DIALOGUE_FILENAME_GLOB and episode
+        else ("* - * - Dialogue.ass" if not episode else DIALOGUE_FILENAME_GLOB)
+    )
+
+    cc = get_first_file(str(prefix / cc_glob)) or get_first_file(str(prefix / "*.srt"))
+    dl = get_first_file(str(prefix / dl_glob)) or get_first_file(str(prefix / "*.ass"))
+
     return cc, dl
 
 
@@ -378,10 +458,12 @@ def parse_file(file: Path | None) -> ParsedFile:
         "type": None,
         "filename": file,
     }
+
     if not file:
         return empty
 
     ext = file.suffix.lower()
+
     if ext == ".ass":
         return {
             "events": ass_events(file),
@@ -389,6 +471,7 @@ def parse_file(file: Path | None) -> ParsedFile:
             "type": "ass",
             "filename": file,
         }
+
     if ext == ".srt":
         return {
             "events": srt_events(file),
@@ -396,19 +479,43 @@ def parse_file(file: Path | None) -> ParsedFile:
             "type": "srt",
             "filename": file,
         }
+
     return empty
 
 
 def main() -> None:
+    context = getattr(args, "context", 0)
+
+    use_season_label = getattr(args, "previous_seasons", False)
+
     for episode in discover_episodes():
         cc, dl = collect_files(episode)
+
         if not cc or not dl:
             continue
+
+        label = f"{Path.cwd().name}/{episode}" if use_season_label else episode
+
         cc_data = parse_file(cc)
         dl_data = parse_file(dl)
-        context = getattr(args, "context", 0)
-        search_episode(episode, dl_data, cc_data, ("TL", "CC"), context)
-        search_episode(episode, cc_data, dl_data, ("CC", "TL"), context)
+
+        search_episode(label, dl_data, cc_data, ("TL", "CC"), context)
+        search_episode(label, cc_data, dl_data, ("CC", "TL"), context)
+
+    if getattr(args, "previous_seasons", False):
+        for base, episode in discover_previous_seasons():
+            cc, dl = collect_files(episode, base=base)
+
+            if not cc or not dl:
+                continue
+
+            label = f"{base.name}/{episode}" if episode else base.name
+
+            cc_data = parse_file(cc)
+            dl_data = parse_file(dl)
+
+            search_episode(label, dl_data, cc_data, ("TL", "CC"), context)
+            search_episode(label, cc_data, dl_data, ("CC", "TL"), context)
 
 
 if __name__ == "__main__":
