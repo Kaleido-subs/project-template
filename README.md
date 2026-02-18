@@ -96,6 +96,10 @@ The following is also valid:
 Only one file may have `opsync` or `edsync` in the effect field.
 It's highly recommended to set it in the _lyrics_ file.
 
+- **.github.sample/workflows/**: GitHub Actions workflows. Remove `.sample` from the directory name.
+
+  - `test-mux.yaml`: A workflow that attempts to run a test mux on each episode on every push to the repo.
+
 ## Getting Started
 
 ### 1. Project Setup
