@@ -11,11 +11,12 @@ plugins {
     id("myaa.subkt")
 }
 
-// Retrieve the script's playRes values
+// Retrieve the script's playRes values from an ASSFile
 fun ASSFile.getPlayRes(): Pair<Int?, Int?> {
     return this.scriptInfo.playResX to this.scriptInfo.playResY
 }
 
+// Retrieve the script's playRes values from a file path
 fun Provider<String>.getPlayRes(): Pair<Int?, Int?> {
     return ASSFile(file(this.get())).getPlayRes()
 }
@@ -35,19 +36,21 @@ fun EventLine.isBlank(): Boolean {
     return this.text.isEmpty() && this.actor.isEmpty() && this.effect.isEmpty()
 }
 
-// Check if a line has a negative duration. These will never render anyway and cause the mux to hang (subkt bug)
+// Check if a line has a negative duration
+// These will never render anyway and cause the mux to hang (subkt bug)
 fun EventLine.isNegativeDuration(): Boolean {
     return this.end < this.start
 }
 
-// Check if a line has a zero duration.
+// Check if a line has a duration of zero
 fun EventLine.isZeroDuration(): Boolean {
     return this.end == this.start
 }
 
 // Check if a line is dialogue
 fun EventLine.isDialogue(): Boolean {
-    return this.style.matches(Regex("Main|Default|Alt"))
+    // Accept "Default-foo" as well etc
+    return this.style.contains(Regex("^(Main|Default|Alt)"))
 }
 
 // Check if premux has multiple audio tracks with English as second track
@@ -195,6 +198,7 @@ subs {
     }
 
     // Remove ktemplate and empty lines from the final output
+    // (Uncomment commented-out line to remove ktemplates)
     val cleanmerge by task<ASS> {
         from(merge.item())
         // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
@@ -207,7 +211,7 @@ subs {
         chapterMarker("chapter")
     }
 
-    // Run swapper script for honorifics and other swaps (keys: "*" and "***").
+    // Run swapper script for honorifics and other swaps (keys: "*" and "***")
     swap {
         from(cleanmerge.item())
 
@@ -217,19 +221,27 @@ subs {
         lineMarker("***")
     }
 
-    // Remove dialogue lines from forced Signs & Song tracks.
+    // Finally, remove all commented lines from the result (e.g. commented-out signs)
+    // We can use the main track as the "definitive" one for further iteration,
+    // but commented lines bloat CodecPrivate (see: )
+    val cleanswap by task<ASS> {
+        from(swap.item())
+        ass { events.lines.removeIf { it.comment } }
+    }
+
+    // Remove dialogue lines from forced Signs & Song tracks
     val strip_dialogue by task<ASS> {
         from(cleanmerge.item())
         ass { events.lines.removeIf { it.isDialogue() } }
     }
 
-    // Merge the forced track (if present) with the stripped dialogue.
+    // Merge the forced track (if present) with the stripped dialogue
     val forced_merge by task<Merge> {
         from(strip_dialogue.item())
         fromIfPresent(getList("forced"), ignoreMissingFiles = true)
     }
 
-    // Run swaps for the forced track (keys: "/" and "///").
+    // Run swaps for the forced track (keys: "/" and "///")
     val forced_swap by task<Swap> {
         from(forced_merge.item())
 
@@ -237,6 +249,12 @@ subs {
 
         delimiter("/")
         lineMarker("///")
+    }
+
+    // Finally, remove all commented lines from the result (e.g. commented-out signs)
+    val cleanforced by task<ASS> {
+        from(forced_swap.item())
+        ass { events.lines.removeIf { it.comment } }
     }
 
     // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
@@ -261,7 +279,7 @@ subs {
         }
 
         from(cleanmerge.item()) {
-            tracks {
+            subtitles {
                 lang("eng")
                 name(get("strack_reg"))
                 default(true)
@@ -270,7 +288,7 @@ subs {
             }
         }
 
-        from(swap.item()) {
+        from(cleanswap.item()) {
             subtitles {
                 lang("enm")
                 name(get("strack_hono"))
@@ -282,7 +300,7 @@ subs {
 
         if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
             from(forced_swap.item()) {
-                tracks {
+                subtitles {
                     lang("eng")
                     name(get("strack_ss"))
                     default(false)
@@ -301,7 +319,7 @@ subs {
             includeExtensions("ttf", "otf")
         }
 
-        attach(get("fonts")) {
+        attach(get("episode_fonts")) {
             includeExtensions("ttf", "otf")
         }
 
@@ -320,22 +338,24 @@ subs {
 
         out(get("muxout"))
 
-        doLast {
-            printMkvInfoTracks(get("muxout").get())
-        }
+        doLast { printMkvInfoTracks(get("muxout").get()) }
     }
 
     torrent {
         trackers(getList("trackers"))
+
         from(mux.item())
+
         out(get("torrent_out"))
     }
 
     batchtasks {
         torrent {
             trackers(getList("trackers"))
+
             from(mux.batchItems())
             into(get("muxdir"))
+
             out(get("torrent_out"))
         }
     }
@@ -348,7 +368,6 @@ subs {
             password(get("nyaapass"))
 
             category(NyaaCategories.ANIME_ENGLISH)
-
             torrentName(get("torrent_title"))
             torrentDescription(file(get("torrent_desc").get()).readText())
             information(get("discord_url"))
@@ -367,7 +386,7 @@ subs {
             includeProjectGarbage(false)
 
             val ncsubPath = getList("ncsubs").orNull?.firstOrNull()
-            val (resX, resY) = ncsubPath?.let { ASSFile(File(it)).getPlayRes() } ?: (null to null)
+            val (resX, resY) = ncsubPath?.let { ASSFile(file(it)).getPlayRes() } ?: (null to null)
 
             scriptInfo {
                 title = get("group").get()
@@ -379,13 +398,14 @@ subs {
         }
 
         // Remove ktemplate and empty lines from the final output
+        // (Uncomment commented-out line to remove ktemplates)
         val cleanmerge by task<ASS> {
             from(merge.item())
             // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
             ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
         }
 
-        // Run swapper script for honorifics and other swaps (keys: "*" and "***").
+        // Run swapper script for honorifics and other swaps (keys: "*" and "***")
         swap {
             from(cleanmerge.item())
 
@@ -395,19 +415,19 @@ subs {
             lineMarker("***")
         }
 
-        // Remove dialogue lines from forced Signs & Song tracks.
+        // Remove dialogue lines from forced Signs & Song tracks
         val strip_dialogue by task<ASS> {
             from(cleanmerge.item())
             ass { events.lines.removeIf { it.isDialogue() } }
         }
 
-        // Merge the forced track (if present) with the stripped dialogue.
+        // Merge the forced track (if present) with the stripped dialogue
         val forced_merge by task<Merge> {
             from(strip_dialogue.item())
             fromIfPresent(getList("forced"), ignoreMissingFiles = true)
         }
 
-        // Run swaps for the forced track (keys: "/" and "///").
+        // Run swaps for the forced track (keys: "/" and "///")
         val forced_swap by task<Swap> {
             from(forced_merge.item())
 
@@ -437,7 +457,7 @@ subs {
             }
 
             from(cleanmerge.item()) {
-                tracks {
+                subtitles {
                     lang("eng")
                     name(get("strack_reg"))
                     default(true)
@@ -459,7 +479,7 @@ subs {
 
             if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
                 from(forced_swap.item()) {
-                    tracks {
+                    subtitles {
                         lang("eng")
                         name(get("strack_ss"))
                         default(false)
