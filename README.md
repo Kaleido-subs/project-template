@@ -1,4 +1,4 @@
-# The Kaleido SubKt Project template
+# The Kaleido [SubKt](https://github.com/Myaamori/SubKt) Project template
 
 [![SubKt Compatibility](https://img.shields.io/badge/SubKt-0.1.27-blue)](https://github.com/LightArrowsEXE/SubKt)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -8,93 +8,95 @@ and copy all the files over
 when making a new fansubbing project.
 
 This template is designed to streamline the process
-of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kaleido-subs) projects.
+of creating and maintaining subtitles for [Kaleido-subs](https://github.com/Kaleido-subs) projects,
+but is available publicly for other aspiring fansub projects to get started.
 
 ## Dependencies
 
-- [SubKt](https://github.com/Myaamori/SubKt)
 - [mkvmerge](https://mkvtoolnix.download/downloads.html)
-- [JDK SE 14](https://www.oracle.com/java/technologies/javase/jdk14-archive-downloads.html),
-  [15](https://www.oracle.com/java/technologies/javase/jdk15-archive-downloads.html),
-  or [16](https://www.oracle.com/java/technologies/javase/jdk16-archive-downloads.html)
+- [JDK SE 14](https://www.oracle.com/java/technologies/javase/jdk14-archive-downloads.html)
 
 > [!IMPORTANT]
 > Ensure all tools are properly added to your system's PATH:
 >
-> - Windows: Edit System Environment Variables → Path → Add the installation directories
-> - Unix: Add export PATH="$PATH:/path/to/tool" to your ~/.bashrc or ~/.zshrc
+> - Windows: Edit System Environment Variables > Path > Add the installation directories
+> - Unix: Add export PATH="$PATH:/path/to/tool" to your `~/.bashrc` or `~/.zshrc`
 
 > [!CAUTION]
-> Currently, only JDK 14, and 15 appear to work out-of-the-box with SubKt, but support has been added to this template for 16 too.
+> Currently, only JDK 14 appears to work out-of-the-box with SubKt (namely, for its ttorrent support).<br>
 > Please ensure Gradle uses the correct version if you run into any issues.
 
 ## Directory Structure
 
-```
+```sh
 project-root/
-├── build.gradle.kts                      # SubKt Gradle build script
-├── sub.properties                        # Project configuration
-├── common/                               # Shared resources
-│   ├── warning.ass                       # Optional player warning
-│   └── fonts/                            # Common fonts
-├── 01/                                   # Episode directory
-│   ├── NewShow - 01 - (Premux) [ABCDEF01].mkv
-│   ├── NewShow - 01 - Dialogue.ass
-│   ├── NewShow - 01 - TS.ass
-│   ├── NewShow - 01 - TS (Author).ass    # Multiple TS allowed
-│   ├── NewShow - 01 - INS (OP).ass       # Optional
-│   ├── NewShow - 01 - INS (ED).ass       # Optional
-│   ├── NewShow - 01 - Extra.ass          # Optional
-│   └── fonts/                            # Episode-specific fonts
-├── NCED1/                                # NCED1 directory
+├── build.gradle.kts                                  # SubKt Gradle build script
+├── sub.properties                                    # Project configuration
+│
+├── common/                                           # Shared resources between all episodes
+│   ├── warning.ass                                   # Optional warning that displays in unsupported players
+│   └── fonts/                                        # Common fonts (e.g. dialogue fonts)
+│
+├── 01/                                               # Episode directory
+│   ├── NewShow - S01E01 - (Premux) [ABCDEF01].mkv
+│   ├── NewShow - S01E01 - Dialogue.ass
+│   ├── NewShow - S01E01 - TS.ass
+│   ├── NewShow - S01E01 - TS (Author).ass            # Multiple TS allowed
+│   ├── NewShow - S01E01 - INS (OP).ass               # Optional
+│   ├── NewShow - S01E01 - INS (ED).ass               # Optional
+│   ├── NewShow - S01E01 - Extra.ass                  # Optional
+│   └── fonts/                                        # Episode-specific fonts
+│                                                     # NC directories
+├── NCED1/
 │   ├── NewShow - NCED1 - Lyrics.ass
-│   ├── NewShow - NCED1 - TS.ass          # Optional
-│   └── fonts/                            # NCED-specific fonts
-├── NCOP1/                                # NCOP1 directory
+│   ├── NewShow - NCED1 - TS.ass                      # Optional
+│   └── fonts/
+├── NCOP1/
 │   ├── NewShow - NCOP1 - Lyrics.ass
-│   ├── NewShow - NCOP1 - TS.ass          # Optional
-│   └── fonts/                            # NCOP-specific fonts
-└── build/                                # Generated output
-    └── ...                               # Episode build artifacts
+│   ├── NewShow - NCOP1 - TS.ass                      # Optional
+│   └── fonts/
+│
+└── build/                                            # Episode build artifacts
+    └── ...
 ```
 
 ### File Naming Requirements
 
 #### Episode files
 
-- **Video files:** `ShowName - XX - (Premux) [CRC32].mkv`
-- **Dialogue:** `ShowName - XX - Dialogue.ass`
-- **Typesetting:** `ShowName - XX - TS.ass` or `ShowName - XX - TS (Author).ass`
-- **Insert Songs:** `ShowName - XX - INS (Song Name).ass`
-- **Extra:** `ShowName - XX - Extra.ass`
+- **Video files:** `ShowName - SxxEyy - (Premux) [CRC32].mkv`
+- **Dialogue:** `ShowName - SxxEyy - Dialogue.ass`
+- **Typesetting:** `ShowName - SxxEyy - TS.ass` or `ShowName - XX - TS (Author).ass`
+- **Insert Songs:** `ShowName - SxxEyy - INS (Song Name).ass`
+- **Extra:** `ShowName - SxxEyy - Extra.ass`
 
 > [!NOTE]
 >
-> - Replace `XX` with the episode number (zero-padded)
-> - CRC32 in the premux file is optional but recommended
-> - Author tags in TS files should match contributor names
+> - Replace `xx` with the season number (zero-padded) and `yy` with the episode number (zero-padded).<br>
+> Refer to https://www.thetvdb.com/ for SxxEyy keys if necessary.
+> - CRC32 in the premux file is optional, but recommended.
 
 #### NCOP/NCED files
 
-- `ShowName - XX.ass`
+- `ShowName - NCxx - Lyrics.ass`
 
 > [!NOTE]
 >
-> - Replace `XX` with the OP/ED number
-> - It accepts any number of NCOP/NCED files, and they will all be merged together before being synced.
+> - Replace `xx` with the OP/ED number
+> - It accepts any number of NCOP/NCED files, and they will all be merged together before being synced to the episode.
 
 **Example of NCOP1 with a lyrics file and a TS file:**
 
 - `NCOP1/NewShow - NCOP1 - Lyrics.ass`
 - `NCOP1/NewShow - NCOP1 - TS.ass`
 
-The following is also valid:
+The following combination is also valid:
 
 - `NCOP1/NewShow - NCOP1.ass`
 - `NCOP1/NewShow - NCOP1 - TS.ass`
 
-Only one file may have `opsync` or `edsync` in the effect field.
-It's highly recommended to set it in the _lyrics_ file.
+Only one file may have `sync` in the effect field.
+It's highly recommended to set it in the `lyrics` file.
 
 ## Getting Started
 
@@ -130,35 +132,50 @@ It's highly recommended to set it in the _lyrics_ file.
 
 3. **Build project:**
 
-   Use the Gradle wrapper to build the project:
+   Use the Gradle wrapper to run tasks to build the project:
 
    ```sh
    # Unix
-   ./gradlew chapters.01    # Generate chapters
-   ./gradlew merge.01      # Merge subtitle files
-   ./gradlew cleanmerge.01 # Clean merged subtitles
-   ./gradlew mux.01        # Create final MKV
+   ./gradlew chapters.01      # Generate chapters from dialogue file
+   ./gradlew merge.01         # Merge all subtitle files
+   ./gradlew cleanmerge.01    # Clean merged subtitles
+   ./gradlew mux.01           # Create final MKV
+   ./gradlew torrent.01       # Create a torrent file for the final MKV
+   ./gradlew nyaa.01          # Upload the torrent file to Nyaa (requires a `sekrit.properties` file with authorization details)
 
    # Windows
-   gradlew.bat chapters.01
-   gradlew.bat merge.01
-   gradlew.bat cleanmerge.01
-   gradlew.bat mux.01
+   gradlew.bat chapters.01    # Generate chapters from dialogue file
+   gradlew.bat merge.01       # Merge all subtitle files
+   gradlew.bat cleanmerge.01  # Clean merged subtitles
+   gradlew.bat mux.01         # Create final MKV
+   gradlew.bat torrent.01     # Create a torrent file for the final MKV
+   gradlew.bat nyaa.01        # Upload the torrent file to Nyaa (requires a `sekrit.properties` file with authorization details)
    ```
 
-### Troubleshooting
+   It's also possible to create specific types of releases.
 
-1. **Merge Failures:**
+   ```ini
+   ncpremux=${episode}/*(Premux)*.mkv
+   mini.*.ncpremux=${episode}/*(Mini Premux)*.mkv
+   ```
 
-   - Check for syntax errors in ASS files
-   - Verify font names match between files
-   - Ensure no UTF-16 BOM in subtitle files
+   These can be used by adding the `-Prelease=xx` parameter before the task:
 
-2. **Mux Errors:**
+   ```sh
+   # Unix
+   ./gradlew -Prelease=mini mux.01
 
-   - Verify mkvmerge is in PATH
-   - Check premux file exists and is readable
-   - Ensure all referenced fonts exist
+   # Windows
+   gradlew.bat -Prelease=mini mux.01
+   ```
+
+   If your shell supports it,
+   you can run multiple tasks iteratively:
+
+   ```sh
+   # Git Bash
+   ./gradlew mux.{01..12}
+   ```
 
 ## Scripts & Hooks
 
@@ -182,6 +199,7 @@ Replaces the given .ass subtitle file with:
 - All Dialogue lines retained structurally but emptied of text
 
 The original file is overwritten in-place.
+
 This is used to blank out for example official scripts
 while preserving their timing
 to use as a base for original translations.
@@ -190,6 +208,7 @@ to use as a base for original translations.
 
 A simple shell script that updates the local git config
 to filter commits using `scripts/clean_project_garbage.sh`.
+
 This will filter out Aegisub project garbage metadata
 so users won't keep overriding that
 with their own premux locations and other local metadata.
@@ -199,51 +218,59 @@ that everyone on the team runs this script.
 ### releasepost
 
 A simple Python script to generate our common release post template.
-It will ask for nyaa and neko urls,
-and create a /release command for [Nino](https://github.com/9vult/nino)
-and tweet for X or BlueSky, including hashtags
-which must be manually set before running the script.
-Currently, the following urls are required,
-although you can modify it after as necessary.
+
+Modify the base script to liking and run it.
+It asks for nyaa and neko urls,
+then creates a /release command for [Nino](https://github.com/9vult/nino)
+and tweet for X or BlueSky, including hashtags.
 
 ### tl_memory
 
 A simple Python script to help you find matches between the TL and CCs.
+
 It will find all lines that match the search term in the TL and CCs,
 and find an accompanying line in the other file.
 You can look up both English and Japanese words,
-and increase the context window to see more lines around the match.
+and increase the context window to see more lines around the match,
+among other options.
 
-![tl_memory example](https://i.imgur.com/8I7g7tB.png)
-![tl_memory example](https://i.imgur.com/AMgvUWM.png)
+<details>
+  <summary>Example usage</summary>
 
-## Setting local.properties
+  ![tl_memory example](https://i.imgur.com/8I7g7tB.png)
+  ![tl_memory example](https://i.imgur.com/AMgvUWM.png)
+
+</details>
+
+## local.properties
 
 The `local.properties` file is not included in this repository.
+
 If you want to use custom local settings,
 you should create this file in the project root directory.
 This allows you to override specific properties locally
 without the risk of accidentally committing them to the repository.
 
-This is read after the `sub.properties` file,
+This is read after the `sub.properties` file and before the `sekrit.properties`,
 and overrides any properties set in that file.
 
 ### Example pointing premux directory to a network drive
 
-```kotlin
+```ini
 # local.properties file in project root directory.
-premux=Z:/share/private/Premuxes/show_title/premux/*${tvdb}* (premux)*.mkv
-{SP*}.premux=Z:/share/private/Premuxes/show_title/premux/Specials/*${tvdb}* (premux)*.mkv
-ncpremux=Z:/share/private/Premuxes/show_title/premux/Extras/*${episode}* (premux)*.mkv
+premux=Z:/share/private/Premuxes/show_title/premux/*${tvdb}*(Premux)*.mkv
+{SP*}.premux=Z:/share/private/Premuxes/show_title/premux/Specials/*${tvdb}*(Premux)*.mkv
+ncpremux=Z:/share/private/Premuxes/show_title/premux/Extras/*${episode}*(Premux)*.mkv
 
-mini.*.premux=Z:/share/private/Premuxes/show_title/premux (AV1)/*${tvdb}* (Mini Premux)*.mkv
-mini.{SP*}.premux=Z:/share/private/Premuxes/show_title/premux (AV1)/Specials/*${tvdb}* (Mini Premux)*.mkv
-mini.*.ncpremux=Z:/share/private/Premuxes/show_title/premux (AV1)/Extras/*${episode}* (Mini Premux)*.mkv
+mini.*.premux=Z:/share/private/Premuxes/show_title/premux (mini)/*${tvdb}*(Mini Premux)*.mkv
+mini.{SP*}.premux=Z:/share/private/Premuxes/show_title/premux (mini)/Specials/*${tvdb}*(Mini Premux)*.mkv
+mini.*.ncpremux=Z:/share/private/Premuxes/show_title/premux (mini)/Extras/*${episode}*(Mini Premux)*.mkv
 ```
 
-## Setting sekrit.properties
+## sekrit.properties
 
 The `sekrit.properties` file is not included in this repository.
+
 This properties file is used to store your Nyaa username and password,
 as well as other sensitive information.
 By default, this file will be read from a directory above the project root directory.
@@ -253,7 +280,7 @@ and overrides any properties set in those files.
 
 ### Example setting Nyaa username and password
 
-```kotlin
+```ini
 # sekrit.properties file in the directory above the project root directory.
 nyaauser=YourUsername
 nyaapass=YourPassword
@@ -269,5 +296,5 @@ and create a pull request with your changes,
 or create an issue.
 
 For further support,
-please contact either LightArrowsEXE or petzku
-on the [Kaleido discord server](https://discord.gg/dk7aadV).
+please contact either @LightArrowsEXE or @petzku
+on the [Kaleido discord server](https://discord.com/servers/stalleido-subs-443264565069742080).
