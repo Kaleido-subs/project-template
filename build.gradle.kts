@@ -134,7 +134,9 @@ fun printMkvInfoTracks(outputPath: String) {
 
 subs {
     readProperties("sub.properties", "local.properties", "../sekrit.properties")
+
     episodes(getList("episodes"))
+    batches(getMap("batches", "episodes"))
 
     // default to TV
     // allow specifying using -Prelease=foo
