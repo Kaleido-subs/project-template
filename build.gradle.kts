@@ -141,8 +141,13 @@ subs {
 
     val layerDialogue by task<ASS> {
         from(get("dialogue"))
+
         ass {
-            events.lines.filter { !it.comment || it.effect == "***" }.forEach { it.layer += 69 }
+            events.lines.filter {
+                !it.comment ||
+                    it.effect == getRaw("DELIMITER_REG").repeat(3) ||
+                    it.effect == getRaw("DELIMITER_S&S").repeat(3)
+            }.forEach { it.layer += 69 }
         }
     }
 
@@ -210,14 +215,14 @@ subs {
         chapterMarker("chapter")
     }
 
-    // Run swapper script for honorifics and other swaps (keys: "*" and "***")
+    // Run swapper script for honorifics and other swaps (see DELIMITER in sub.properties)
     swap {
         from(cleanMerged.item())
 
         styles(Regex(".*"))
 
-        delimiter("*")
-        lineMarker("***")
+        delimiter(getRaw("DELIMITER_REG"))
+        lineMarker(getRaw("DELIMITER_REG").repeat(3))
     }
 
     // Finally, remove all commented lines from the result (e.g. commented-out signs)
@@ -240,14 +245,14 @@ subs {
         fromIfPresent(getList("forced"), ignoreMissingFiles = true)
     }
 
-    // Run swaps for the forced track (keys: "/" and "///")
+    // Run swaps for the forced track (see DELIMITER_S&S in sub.properties)
     val forcedSwap by task<Swap> {
         from(forcedMerge.item())
 
         styles(Regex(".*"))
 
-        delimiter("/")
-        lineMarker("///")
+        delimiter(getRaw("DELIMITER_S&S"))
+        lineMarker(getRaw("DELIMITER_S&S").repeat(3))
     }
 
     // Finally, remove all commented lines from the result (e.g. commented-out signs)
@@ -287,13 +292,16 @@ subs {
             }
         }
 
-        from(cleanSwap.item()) {
-            subtitles {
-                lang("enm")
-                name(get("strack_hono"))
-                default(true)
-                forced(false)
-                compression(CompressionType.ZLIB)
+        // TODO: Add automated comparison that actually works to see if a swap is required.
+        if (get("ENABLE_SWAP").get().toBoolean()) {
+            from(cleanSwap.item()) {
+                subtitles {
+                    lang("enm")
+                    name(get("strack_hono"))
+                    default(true)
+                    forced(false)
+                    compression(CompressionType.ZLIB)
+                }
             }
         }
 
@@ -404,14 +412,14 @@ subs {
             ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
         }
 
-        // Run swapper script for honorifics and other swaps (keys: "*" and "***")
+        // Run swapper script for honorifics and other swaps (see DELIMITER in sub.properties)
         swap {
             from(cleanMerged.item())
 
             styles(Regex(".*"))
 
-            delimiter("*")
-            lineMarker("***")
+            delimiter(getRaw("DELIMITER_REG"))
+            lineMarker(getRaw("DELIMITER_REG").repeat(3))
         }
 
         // Remove dialogue lines from forced Signs & Song tracks
@@ -426,14 +434,14 @@ subs {
             fromIfPresent(getList("forced"), ignoreMissingFiles = true)
         }
 
-        // Run swaps for the forced track (keys: "/" and "///")
+        // Run swaps for the forced track (see DELIMITER_S&S in sub.properties)
         val forcedSwap by task<Swap> {
             from(forcedMerge.item())
 
             styles(Regex(".*"))
 
-            delimiter("/")
-            lineMarker("///")
+            delimiter(getRaw("DELIMITER_S&S"))
+            lineMarker(getRaw("DELIMITER_S&S").repeat(3))
         }
 
         // Finally, remove all commented lines from the result (e.g. commented-out signs)
@@ -470,13 +478,15 @@ subs {
             }
 
             // TODO: Add automated comparison that actually works to see if a swap is required.
-            from(swap.item()) {
+            if (get("ENABLE_SWAP").get().toBoolean()) {
+                from(swap.item()) {
                 subtitles {
                     lang("enm")
                     name(get("strack_hono"))
                     default(true)
                     forced(false)
                     compression(CompressionType.ZLIB)
+                    }
                 }
             }
 
@@ -504,9 +514,7 @@ subs {
 
             out(get("ncmuxout"))
 
-            doLast {
-                printMkvInfoTracks(get("ncmuxout").get())
-            }
+            doLast { printMkvInfoTracks(get("ncmuxout").get()) }
         }
     }
 }
