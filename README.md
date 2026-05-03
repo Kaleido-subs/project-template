@@ -130,6 +130,11 @@ It's highly recommended to set it in the `lyrics` file.
    - (Optional) Set up INS and Extra subtitle files.
    - Collect all the fonts and put them in the `episode/fonts/` directory (i.e. `01/fonts/`).
 
+   > [!CAUTION]
+   >
+   > This build script will automatically add a Signs & Songs track if, and only if, the `format` key contains "Dual Audio".
+   > Make sure to double-check your properties where necessary, as well as your muxed file to make sure it doesn't create one where it shouldn't!
+
 3. **Build project:**
 
    Use the Gradle wrapper to run tasks to build the project:

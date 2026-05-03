@@ -53,15 +53,6 @@ fun EventLine.isDialogue(): Boolean {
     return this.style.contains(Regex("^(Main|Default|Alt)"))
 }
 
-// Check if premux has multiple audio tracks with English as second track
-fun includeForcedTrack(sortedTracks: List<MkvTrack>): Boolean {
-    val audioTracks = sortedTracks.filter { it.type == "audio" }
-    val hasMultipleAudio = audioTracks.size > 1
-    val secondTrackIsEnglish = audioTracks.getOrNull(1)?.properties?.language == "eng"
-
-    return hasMultipleAudio && secondTrackIsEnglish
-}
-
 // Get MkvInfo and return tracks sorted by type
 fun getMkvInfoTracks(mkvPath: String): List<MkvTrack> {
     val mkvFile = File(projectDir, mkvPath)
@@ -260,8 +251,8 @@ subs {
     }
 
     // Finally, remove all commented lines from the result (e.g. commented-out signs)
-    val cleanforced by task<ASS> {
-        from(forced_swap.item())
+    val cleanForcedSwap by task<ASS> {
+        from(forcedSwap.item())
         ass { events.lines.removeIf { it.comment } }
     }
 
@@ -274,8 +265,6 @@ subs {
         if (propertyExists("mkvmerge")) {
             mkvmerge(get("mkvmerge"))
         }
-
-        val premuxTracks = getMkvInfoTracks(get("premux").get())
 
         from(get("premux")) {
             tracks {
@@ -306,8 +295,8 @@ subs {
             }
         }
 
-        if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
-            from(forcedSwap.item()) {
+        if (get("format").get().contains("Dual Audio", ignoreCase = true)) {
+            from(cleanForcedSwap.item()) {
                 subtitles {
                     lang("eng")
                     name(get("strack_ss"))
@@ -445,6 +434,12 @@ subs {
             lineMarker("///")
         }
 
+        // Finally, remove all commented lines from the result (e.g. commented-out signs)
+        val cleanForcedSwap by task<ASS> {
+            from(forcedSwap.item())
+            ass { events.lines.removeIf { it.comment } }
+        }
+
         mux {
             // TODO: Add automated format extraction from premux file and update title
             title(get("title"))
@@ -452,8 +447,6 @@ subs {
             if (propertyExists("mkvmerge")) {
                 mkvmerge(get("mkvmerge"))
             }
-
-            val premuxTracks = getMkvInfoTracks(get("ncpremux").get())
 
             from(get("ncpremux")) {
                 tracks {
@@ -485,8 +478,8 @@ subs {
                 }
             }
 
-            if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
-                from(forcedSwap.item()) {
+            if (get("format").get().contains("Dual Audio", ignoreCase = true)) {
+                from(cleanForcedSwap.item()) {
                     subtitles {
                         lang("eng")
                         name(get("strack_ss"))
