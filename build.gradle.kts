@@ -222,7 +222,7 @@ subs {
 
     // Finally, remove all commented lines from the result (e.g. commented-out signs)
     // We can use the main track as the "definitive" one for further iteration,
-    // but commented lines bloat CodecPrivate (see: )
+    // but commented lines bloat CodecPrivate (see: https://github.com/clsid2/mpc-hc/issues/3793)
     val cleanSwap by task<ASS> {
         from(swap.item())
         ass { events.lines.removeIf { it.comment } }
@@ -251,6 +251,8 @@ subs {
     }
 
     // Finally, remove all commented lines from the result (e.g. commented-out signs)
+    // We can use the main track as the "definitive" one for further iteration,
+    // but commented lines bloat CodecPrivate (see: https://github.com/clsid2/mpc-hc/issues/3793)
     val cleanForcedSwap by task<ASS> {
         from(forcedSwap.item())
         ass { events.lines.removeIf { it.comment } }
