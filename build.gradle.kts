@@ -111,6 +111,11 @@ fun printMkvInfoTracks(outputPath: String) {
             if (props.original_language != null) {
                 infoLines += "Original language: ${props.original_language}"
             }
+
+            if (props.commentary_track != null) {
+                infoLines += "Commentary       : ${props.commentary_track}"
+            }
+
             if (props.hearing_impaired_track != null) {
                 infoLines += "Hearing impaired : ${props.hearing_impaired_track}"
             }
