@@ -91,15 +91,16 @@ fun printMkvInfoTracks(outputPath: String) {
     val tracks = getMkvInfoTracks(outputPath)
 
     val fileName = File(outputPath).name
-    val num_dashes = fileName.length + 15
+    val numDashes = fileName.length + 15
 
     println("\n".repeat(2))
-    println("+${"-".repeat(num_dashes)}")
+    println("+${"-".repeat(numDashes)}")
     println("| Tracks for $fileName")
 
     tracks.forEach { track ->
-        println("+${"-".repeat(num_dashes + 2)}")
+        println("+${"-".repeat(numDashes + 2)}")
         println("| Track #${track.id}  [${track.type}]  (${track.codec})")
+
         track.properties?.let { props ->
             val infoLines = mutableListOf<String>()
             infoLines += "Language         : ${props.language ?: "und"}"
@@ -129,7 +130,7 @@ fun printMkvInfoTracks(outputPath: String) {
         }
     }
 
-    println("+${"-".repeat(num_dashes + 1)}")
+    println("+${"-".repeat(numDashes + 1)}")
 }
 
 subs {
@@ -150,11 +151,11 @@ subs {
     }
 
     // Pre-merge OP and ED files so multiple components can be merged at once easily
-    val premerge_op by task<Merge> {
+    val premergeOp by task<Merge> {
         fromIfPresent(getList("OP"), ignoreMissingFiles = true)
     }
 
-    val premerge_ed by task<Merge> {
+    val premergeEd by task<Merge> {
         fromIfPresent(getList("ED"), ignoreMissingFiles = true)
     }
 
@@ -166,14 +167,14 @@ subs {
         fromIfPresent(getList("TS"), ignoreMissingFiles = true)
 
         if (propertyExists("OP")) {
-            from(premerge_op.item()) {
+            from(premergeOp.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("opsync")
             }
         }
 
         if (propertyExists("ED")) {
-            from(premerge_ed.item()) {
+            from(premergeEd.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("edsync")
             }
@@ -201,7 +202,7 @@ subs {
 
     // Remove ktemplate and empty lines from the final output
     // (Uncomment commented-out line to remove ktemplates)
-    val cleanmerge by task<ASS> {
+    val cleanMerged by task<ASS> {
         from(merge.item())
         // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
         ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
@@ -215,7 +216,7 @@ subs {
 
     // Run swapper script for honorifics and other swaps (keys: "*" and "***")
     swap {
-        from(cleanmerge.item())
+        from(cleanMerged.item())
 
         styles(Regex(".*"))
 
@@ -226,26 +227,26 @@ subs {
     // Finally, remove all commented lines from the result (e.g. commented-out signs)
     // We can use the main track as the "definitive" one for further iteration,
     // but commented lines bloat CodecPrivate (see: )
-    val cleanswap by task<ASS> {
+    val cleanSwap by task<ASS> {
         from(swap.item())
         ass { events.lines.removeIf { it.comment } }
     }
 
     // Remove dialogue lines from forced Signs & Song tracks
-    val strip_dialogue by task<ASS> {
-        from(cleanmerge.item())
+    val stripDialogue by task<ASS> {
+        from(cleanMerged.item())
         ass { events.lines.removeIf { it.isDialogue() } }
     }
 
     // Merge the forced track (if present) with the stripped dialogue
-    val forced_merge by task<Merge> {
-        from(strip_dialogue.item())
+    val forcedMerge by task<Merge> {
+        from(stripDialogue.item())
         fromIfPresent(getList("forced"), ignoreMissingFiles = true)
     }
 
     // Run swaps for the forced track (keys: "/" and "///")
-    val forced_swap by task<Swap> {
-        from(forced_merge.item())
+    val forcedSwap by task<Swap> {
+        from(forcedMerge.item())
 
         styles(Regex(".*"))
 
@@ -280,7 +281,7 @@ subs {
             attachments { include(false) }
         }
 
-        from(cleanmerge.item()) {
+        from(cleanMerged.item()) {
             subtitles {
                 lang("eng")
                 name(get("strack_reg"))
@@ -290,7 +291,7 @@ subs {
             }
         }
 
-        from(cleanswap.item()) {
+        from(cleanSwap.item()) {
             subtitles {
                 lang("enm")
                 name(get("strack_hono"))
@@ -301,7 +302,7 @@ subs {
         }
 
         if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
-            from(forced_swap.item()) {
+            from(forcedSwap.item()) {
                 subtitles {
                     lang("eng")
                     name(get("strack_ss"))
@@ -401,7 +402,7 @@ subs {
 
         // Remove ktemplate and empty lines from the final output
         // (Uncomment commented-out line to remove ktemplates)
-        val cleanmerge by task<ASS> {
+        val cleanMerged by task<ASS> {
             from(merge.item())
             // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
             ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
@@ -409,7 +410,7 @@ subs {
 
         // Run swapper script for honorifics and other swaps (keys: "*" and "***")
         swap {
-            from(cleanmerge.item())
+            from(cleanMerged.item())
 
             styles(Regex(".*"))
 
@@ -418,20 +419,20 @@ subs {
         }
 
         // Remove dialogue lines from forced Signs & Song tracks
-        val strip_dialogue by task<ASS> {
-            from(cleanmerge.item())
+        val stripDialogue by task<ASS> {
+            from(cleanMerged.item())
             ass { events.lines.removeIf { it.isDialogue() } }
         }
 
         // Merge the forced track (if present) with the stripped dialogue
-        val forced_merge by task<Merge> {
-            from(strip_dialogue.item())
+        val forcedMerge by task<Merge> {
+            from(stripDialogue.item())
             fromIfPresent(getList("forced"), ignoreMissingFiles = true)
         }
 
         // Run swaps for the forced track (keys: "/" and "///")
-        val forced_swap by task<Swap> {
-            from(forced_merge.item())
+        val forcedSwap by task<Swap> {
+            from(forcedMerge.item())
 
             styles(Regex(".*"))
 
@@ -458,7 +459,7 @@ subs {
                 attachments { include(false) }
             }
 
-            from(cleanmerge.item()) {
+            from(cleanMerged.item()) {
                 subtitles {
                     lang("eng")
                     name(get("strack_reg"))
@@ -480,7 +481,7 @@ subs {
             }
 
             if (includeForcedTrack(premuxTracks.filter { it.type == "audio" })) {
-                from(forced_swap.item()) {
+                from(forcedSwap.item()) {
                     subtitles {
                         lang("eng")
                         name(get("strack_ss"))

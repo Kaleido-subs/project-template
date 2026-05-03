@@ -33,7 +33,7 @@
 ### Audio
 
 | Track        | Codec | Channels | Bitrate  | Source          | Default | Forced |
-| ------------ | ----- | -------- | -------- | ----------------| ------- | ------ |
+| ------------ | ----- | -------- | -------- | --------------- | ------- | ------ |
 | **Japanese** | Opus  | 2.0      | 192 kbps | [BD (x)][bdsrc] | Yes     | No     |
 
 ### Subtitles
