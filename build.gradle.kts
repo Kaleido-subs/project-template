@@ -129,6 +129,7 @@ fun printMkvInfoTracks(outputPath: String) {
     println("+${"-".repeat(numDashes + 1)}")
 }
 
+
 subs {
     readProperties("sub.properties", "local.properties", "../sekrit.properties")
 
@@ -167,14 +168,14 @@ subs {
         fromIfPresent(getList("extra"), ignoreMissingFiles = true)
         fromIfPresent(getList("TS"), ignoreMissingFiles = true)
 
-        if (propertyExists("OP")) {
+        if (propertyExists("OP") && getList("OP").get().isNotEmpty()) {
             from(premergeOp.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("opsync")
             }
         }
 
-        if (propertyExists("ED")) {
+        if (propertyExists("ED") && getList("ED").get().isNotEmpty()) {
             from(premergeEd.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("edsync")
@@ -317,7 +318,9 @@ subs {
             }
         }
 
-        chapters(chapters.item()) { lang("eng") }
+        if (!get("title").get().contains("NC", ignoreCase = true)) {
+            chapters(chapters.item()) { lang("eng") }
+        }
 
         // Fonts handling
         skipUnusedFonts(true)
@@ -380,141 +383,6 @@ subs {
             information(get("discord_url"))
 
             hidden(true)
-        }
-    }
-
-    // =================================================================================================================
-    // NCOP/EDs
-    tasks(getList("ncs")) {
-        merge {
-            fromIfPresent(getList("ncsubs"), ignoreMissingFiles = true)
-
-            includeExtraData(false)
-            includeProjectGarbage(false)
-
-            val ncsubPath = getList("ncsubs").orNull?.firstOrNull()
-            val (resX, resY) = ncsubPath?.let { ASSFile(file(it)).getPlayRes() } ?: (null to null)
-
-            scriptInfo {
-                title = get("group").get()
-                scaledBorderAndShadow = true
-                wrapStyle = WrapStyle.NO_WRAP
-                values["LayoutResX"] = resX ?: -1
-                values["LayoutResY"] = resY ?: -1
-            }
-        }
-
-        // Remove ktemplate and empty lines from the final output
-        // (Uncomment commented-out line to remove ktemplates)
-        val cleanMerged by task<ASS> {
-            from(merge.item())
-            // ass { events.lines.removeIf { it.isKaraTemplate() or it.isBlank() or it.isNegativeDuration() } }
-            ass { events.lines.removeIf { it.isBlank() or it.isNegativeDuration() } }
-        }
-
-        // Run swapper script for honorifics and other swaps (see DELIMITER in sub.properties)
-        swap {
-            from(cleanMerged.item())
-
-            styles(Regex(".*"))
-
-            delimiter(getRaw("DELIMITER_REG"))
-            lineMarker(getRaw("DELIMITER_REG").repeat(3))
-        }
-
-        // Remove dialogue lines from forced Signs & Song tracks
-        val stripDialogue by task<ASS> {
-            from(cleanMerged.item())
-            ass { events.lines.removeIf { it.isDialogue() } }
-        }
-
-        // Merge the forced track (if present) with the stripped dialogue
-        val forcedMerge by task<Merge> {
-            from(stripDialogue.item())
-            fromIfPresent(getList("forced"), ignoreMissingFiles = true)
-        }
-
-        // Run swaps for the forced track (see DELIMITER_S&S in sub.properties)
-        val forcedSwap by task<Swap> {
-            from(forcedMerge.item())
-
-            styles(Regex(".*"))
-
-            delimiter(getRaw("DELIMITER_S&S"))
-            lineMarker(getRaw("DELIMITER_S&S").repeat(3))
-        }
-
-        // Finally, remove all commented lines from the result (e.g. commented-out signs)
-        val cleanForcedSwap by task<ASS> {
-            from(forcedSwap.item())
-            ass { events.lines.removeIf { it.comment } }
-        }
-
-        mux {
-            // TODO: Add automated format extraction from premux file and update title
-            title(get("title"))
-
-            if (propertyExists("mkvmerge")) {
-                mkvmerge(get("mkvmerge"))
-            }
-
-            from(get("ncpremux")) {
-                tracks {
-                    include(track.type == TrackType.VIDEO || track.type == TrackType.AUDIO)
-                }
-
-                includeChapters(false)
-                attachments { include(false) }
-            }
-
-            from(cleanMerged.item()) {
-                subtitles {
-                    lang("eng")
-                    name(get("strack_reg"))
-                    default(true)
-                    forced(false)
-                    compression(CompressionType.ZLIB)
-                }
-            }
-
-            // TODO: Add automated comparison that actually works to see if a swap is required.
-            if (get("ENABLE_SWAP").get().toBoolean()) {
-                from(swap.item()) {
-                subtitles {
-                    lang("enm")
-                    name(get("strack_hono"))
-                    default(true)
-                    forced(false)
-                    compression(CompressionType.ZLIB)
-                    }
-                }
-            }
-
-            if (get("format").get().contains("Dual Audio", ignoreCase = true)) {
-                from(cleanForcedSwap.item()) {
-                    subtitles {
-                        lang("eng")
-                        name(get("strack_ss"))
-                        default(false)
-                        forced(true)
-                        compression(CompressionType.ZLIB)
-                    }
-                }
-            }
-
-            skipUnusedFonts(true)
-
-            attach(get("ncfonts")) {
-                includeExtensions("ttf", "otf")
-            }
-
-            attach(get("common_fonts")) {
-                includeExtensions("ttf", "otf")
-            }
-
-            out(get("ncmuxout"))
-
-            doLast { printMkvInfoTracks(get("ncmuxout").get()) }
         }
     }
 }
