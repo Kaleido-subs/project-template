@@ -168,14 +168,14 @@ subs {
         fromIfPresent(getList("extra"), ignoreMissingFiles = true)
         fromIfPresent(getList("TS"), ignoreMissingFiles = true)
 
-        if (propertyExists("OP") && getList("OP").get().isNotEmpty()) {
+        if (propertyExists("OP") && getRawMaybe("OP")?.isNotBlank() == true) {
             from(premergeOp.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("opsync")
             }
         }
 
-        if (propertyExists("ED") && getList("ED").get().isNotEmpty()) {
+        if (propertyExists("ED") && getRawMaybe("ED")?.isNotBlank() == true) {
             from(premergeEd.item()) {
                 syncSourceLine("sync")
                 syncTargetLine("edsync")
@@ -318,7 +318,7 @@ subs {
             }
         }
 
-        if (!get("title").get().contains("NC", ignoreCase = true)) {
+        if (!get("epnum").get().startsWith("NC", ignoreCase=true)) {
             chapters(chapters.item()) { lang("eng") }
         }
 
