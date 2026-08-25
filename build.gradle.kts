@@ -264,23 +264,13 @@ subs {
         ass { events.lines.removeIf { it.comment } }
     }
 
-    // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
-    mux {
-        // TODO: Add automated format extraction from premux file and update title
+    // Pack subtitles and fonts into an .mks file
+    val mks by task<Mux> {
         title(get("title"))
 
         // Optionally specify mkvmerge version to use
         if (propertyExists("mkvmerge")) {
             mkvmerge(get("mkvmerge"))
-        }
-
-        from(get("premux")) {
-            tracks {
-                include(track.type == TrackType.VIDEO || track.type == TrackType.AUDIO)
-            }
-
-            includeChapters(false)
-            attachments { include(false) }
         }
 
         from(cleanMerged.item()) {
@@ -345,6 +335,33 @@ subs {
                 includeExtensions("ttf", "otf")
             }
         }
+
+        out(get("mksout"))
+
+        doLast { printMkvInfoTracks(get("mksout").get()) }
+    }
+
+    // Finally, mux following the conventions listed here: https://thewiki.moe/advanced/muxing/#correct-tagging
+    mux {
+        // TODO: Add automated format extraction from premux file and update title
+        title(get("title"))
+
+        // Optionally specify mkvmerge version to use
+        if (propertyExists("mkvmerge")) {
+            mkvmerge(get("mkvmerge"))
+        }
+
+        from(get("premux")) {
+            tracks {
+                include(track.type == TrackType.VIDEO || track.type == TrackType.AUDIO)
+            }
+
+            includeChapters(false)
+            attachments { include(false) }
+        }
+
+        // Add subtitles and fonts from the .mks build file
+        from(mks.item())
 
         out(get("muxout"))
 
